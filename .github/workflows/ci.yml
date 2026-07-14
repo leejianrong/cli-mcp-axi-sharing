@@ -46,3 +46,22 @@ jobs:
           cache-dependency-path: ci-demo/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+
+  measure:
+    name: Token-diff smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: ci-demo/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # Regenerates payloads from a clean state and prints the token table.
+      # Guards the capture + token-diff path against rot. Fully offline.
+      - run: node scripts/token-diff.mjs

@@ -1,0 +1,8 @@
+# pnpm 11 reads build/run settings from here (no longer from package.json).
+# Approve esbuild's postinstall (a vitest transitive dep) and skip the pre-run
+# deps check so `pnpm build` / `pnpm test` don't trip on it.
+allowBuilds:
+  esbuild: true
+onlyBuiltDependencies:
+  - esbuild
+verifyDepsBeforeRun: false

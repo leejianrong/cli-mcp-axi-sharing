@@ -1,0 +1,122 @@
+[
+  {
+    "id": "run_8f2a",
+    "status": "failed",
+    "branch": "feat/checkout-retry",
+    "commit": { "sha": "a1b9c3d", "message": "retry flaky checkout step", "author": "priya" },
+    "trigger": "push",
+    "duration_seconds": 342,
+    "created_at": "2026-07-13T09:21:04Z",
+    "jobs": [
+      { "name": "lint", "status": "success", "duration": 22 },
+      { "name": "unit", "status": "success", "duration": 118 },
+      { "name": "e2e", "status": "failed", "duration": 202 }
+    ],
+    "logs": "› e2e: checkout.spec.ts › completes purchase with saved card\n  ✓ loads cart (1204ms)\n  ✓ applies promo code SAVE10 (842ms)\n  ✗ submits payment and shows confirmation (30011ms)\n\n  TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\n  Call log:\n    - waiting for selector \"[data-test=order-confirmation]\" to be visible\n    - selector resolved to hidden <div data-test=\"order-confirmation\">…</div>\n    - waiting for element to be visible\n\n    at CheckoutPage.confirmOrder (e2e/pages/checkout.ts:88:23)\n    at Object.<anonymous> (e2e/checkout.spec.ts:141:5)\n\n  Retry #1 of 2 …\n  ✗ submits payment and shows confirmation (30008ms) — same TimeoutError\n  Retry #2 of 2 …\n  ✗ submits payment and shows confirmation (30014ms) — same TimeoutError\n\n  1 failed, 2 passed (3 total) in 91.4s\n  Payment gateway sandbox returned 502 on 3/3 attempts — see network.har\n  ::error::e2e job failed after 2 retries; flaky payment sandbox suspected\nProcess completed with exit code 1."
+  },
+  {
+    "id": "run_3d71",
+    "status": "failed",
+    "branch": "fix/session-expiry",
+    "commit": { "sha": "c4f0e21", "message": "clear stale refresh token on 401", "author": "marco" },
+    "trigger": "pull_request",
+    "duration_seconds": 176,
+    "created_at": "2026-07-13T11:47:52Z",
+    "jobs": [
+      { "name": "lint", "status": "success", "duration": 19 },
+      { "name": "unit", "status": "failed", "duration": 91 },
+      { "name": "e2e", "status": "skipped", "duration": 0 }
+    ],
+    "logs": "› unit: auth/session.test.ts\n  ✓ issues access token on login (12ms)\n  ✓ refreshes token before expiry (31ms)\n  ✗ clears refresh token when server returns 401 (4ms)\n\n  AssertionError: expected refreshToken to be null\n    expected: null\n    received: \"rt_9a3f…c17\"\n\n    at Object.<anonymous> (auth/session.test.ts:64:38)\n\n  ✗ redirects to /login after refresh failure (2ms)\n    AssertionError: expected location.pathname \"/dashboard\" to equal \"/login\"\n    at Object.<anonymous> (auth/session.test.ts:79:42)\n\n  2 failed, 1 passed (3 total) in 0.71s\n  Coverage: statements 78.2% (-1.4%), branches 71.0% (-2.1%)\n  ::error::unit job failed: 2 assertions in auth/session.test.ts\n  e2e job skipped because a required job (unit) failed.\nProcess completed with exit code 1."
+  },
+  {
+    "id": "run_b90c",
+    "status": "failed",
+    "branch": "chore/bump-node-24",
+    "commit": { "sha": "e77aa08", "message": "upgrade CI image to node 24", "author": "sam" },
+    "trigger": "push",
+    "duration_seconds": 58,
+    "created_at": "2026-07-13T14:02:19Z",
+    "jobs": [
+      { "name": "lint", "status": "failed", "duration": 41 },
+      { "name": "unit", "status": "cancelled", "duration": 0 },
+      { "name": "e2e", "status": "cancelled", "duration": 0 }
+    ],
+    "logs": "Setting up job: build (node 24.10.0)\n  ✓ actions/checkout@v4\n  ✓ actions/setup-node@v4 (node 24.10.0)\n  › pnpm install --frozen-lockfile\n    Lockfile is up to date, resolution step is skipped\n    Packages: +812\n    Done in 9.2s\n  › pnpm run lint\n    eslint . --max-warnings=0\n\n    /app/src/util/parseDate.ts\n      14:7  error  'Intl.DateTimeFormat' assertion is unnecessary  @typescript-eslint/no-unnecessary-type-assertion\n      27:1  error  Unexpected console statement  no-console\n\n    /app/src/util/format.ts\n      9:12  error  'padStart' is possibly undefined under node 24 lib update  @typescript-eslint/no-unsafe-call\n\n    ✖ 3 problems (3 errors, 0 warnings)\n\n  ::error::lint job failed with 3 eslint errors\n  Cancelling dependent jobs: unit, e2e\nProcess completed with exit code 1."
+  },
+  {
+    "id": "run_5e14",
+    "status": "running",
+    "branch": "feat/search-facets",
+    "commit": { "sha": "12bd4f9", "message": "add faceted search to catalog", "author": "lena" },
+    "trigger": "push",
+    "duration_seconds": 214,
+    "created_at": "2026-07-13T15:10:41Z",
+    "jobs": [
+      { "name": "lint", "status": "success", "duration": 20 },
+      { "name": "unit", "status": "success", "duration": 132 },
+      { "name": "e2e", "status": "running", "duration": 62 }
+    ],
+    "logs": "› e2e: search.spec.ts (in progress)\n  ✓ renders empty state before query (712ms)\n  ✓ shows facet counts for 'laptops' (2.1s)\n  ✓ narrows results when brand facet applied (1.8s)\n  ⧗ paginates deep result sets … running (elapsed 41s)\n\n  [browser] navigated to /catalog?q=laptop&brand=acme&page=7\n  [browser] waiting for [data-test=result-grid] to settle\n  [runner] 3 passed, 0 failed, 1 running (7 total)\n  [runner] heartbeat ok — worker 2/4 still active\n  Streaming logs… job has not completed."
+  },
+  {
+    "id": "run_a6d2",
+    "status": "running",
+    "branch": "main",
+    "commit": { "sha": "9c02a7b", "message": "nightly scheduled build", "author": "ci-bot" },
+    "trigger": "schedule",
+    "duration_seconds": 402,
+    "created_at": "2026-07-13T16:00:00Z",
+    "jobs": [
+      { "name": "lint", "status": "success", "duration": 21 },
+      { "name": "unit", "status": "running", "duration": 240 },
+      { "name": "e2e", "status": "pending", "duration": 0 }
+    ],
+    "logs": "› unit: full suite (in progress)\n  Running 1,284 tests across 6 shards\n  shard 1/6 ✓ 214 passed (38.2s)\n  shard 2/6 ✓ 219 passed (40.1s)\n  shard 3/6 ✓ 208 passed (37.7s)\n  shard 4/6 ⧗ running … 151/221 (34s elapsed)\n  shard 5/6 ⧗ queued\n  shard 6/6 ⧗ queued\n\n  [runner] estimated 2m remaining\n  e2e job pending: waiting for unit to finish\n  Streaming logs… job has not completed."
+  },
+  {
+    "id": "run_2f88",
+    "status": "success",
+    "branch": "feat/csv-export",
+    "commit": { "sha": "4410de6", "message": "stream large CSV exports", "author": "priya" },
+    "trigger": "pull_request",
+    "duration_seconds": 268,
+    "created_at": "2026-07-12T18:33:12Z",
+    "jobs": [
+      { "name": "lint", "status": "success", "duration": 18 },
+      { "name": "unit", "status": "success", "duration": 121 },
+      { "name": "e2e", "status": "success", "duration": 129 }
+    ],
+    "logs": "› lint ✓ (18s)  no problems\n› unit ✓ (121s)  1,284 passed, 0 failed\n  Coverage: statements 84.6%, branches 79.3%, functions 88.1%\n› e2e ✓ (129s)  42 passed, 0 failed\n  ✓ streams a 250MB export without OOM (peak RSS 412MB)\n  ✓ resumes interrupted download from byte offset\n  ✓ escapes embedded quotes and newlines in cells\n\n  All jobs succeeded. Artifacts uploaded: export-sample.csv (2.1MB)\nProcess completed with exit code 0."
+  },
+  {
+    "id": "run_7c53",
+    "status": "success",
+    "branch": "fix/tooltip-aria",
+    "commit": { "sha": "b0d19f4", "message": "add aria-describedby to tooltips", "author": "marco" },
+    "trigger": "push",
+    "duration_seconds": 141,
+    "created_at": "2026-07-12T20:05:47Z",
+    "jobs": [
+      { "name": "lint", "status": "success", "duration": 17 },
+      { "name": "unit", "status": "success", "duration": 74 },
+      { "name": "e2e", "status": "success", "duration": 50 }
+    ],
+    "logs": "› lint ✓ (17s)  no problems\n› unit ✓ (74s)  611 passed, 0 failed\n› e2e ✓ (50s)  a11y suite\n  ✓ tooltips expose aria-describedby (318ms)\n  ✓ focus ring visible on keyboard nav (204ms)\n  ✓ axe-core: 0 violations on /dashboard\n\n  All jobs succeeded. No regressions detected.\nProcess completed with exit code 0."
+  },
+  {
+    "id": "run_1ab0",
+    "status": "success",
+    "branch": "docs/api-reference",
+    "commit": { "sha": "f9e3c55", "message": "regenerate API reference from openapi", "author": "lena" },
+    "trigger": "push",
+    "duration_seconds": 63,
+    "created_at": "2026-07-12T22:41:30Z",
+    "jobs": [
+      { "name": "lint", "status": "success", "duration": 16 },
+      { "name": "unit", "status": "success", "duration": 31 },
+      { "name": "e2e", "status": "skipped", "duration": 0 }
+    ],
+    "logs": "› lint ✓ (16s)  no problems\n› unit ✓ (31s)  88 passed, 0 failed (docs-only change)\n› e2e — skipped (docs-only path filter matched **/*.md)\n  › docs:build ✓ (14s)  generated 214 pages, 0 broken links\n  Deploy preview ready: https://preview.internal/docs/f9e3c55\n\n  All required jobs succeeded.\nProcess completed with exit code 0."
+  }
+]

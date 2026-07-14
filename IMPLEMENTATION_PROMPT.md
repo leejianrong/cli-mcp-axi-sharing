@@ -43,7 +43,9 @@ I'm building an internal ~25–30 min talk called **"CLI vs MCP vs AXI"** plus a
 
 **Phase 9 — Sync the docs with reality.** Update `presentation_outline.md` **Slide 11** and `live_demo_script.md` **Step 4** with the real token numbers; fill **Slide 12**'s summary table with the agent-run metrics (turns/tokens/cost). Update **Slide 8b** so its before/after snippets match the shipped `src/axi.ts` line-for-line.
 
-**Phase 10 — (Optional, ask me first) Render the deck.** If I say yes, turn `presentation_outline.md` into actual slides (recommend Marp or Slidev, Markdown-based) with the code snippets and results baked in. Leave a placeholder for the recorded-demo fallback video.
+**Phase 10a — (Pause, Ask me first) Render the deck.** If I say yes, turn `presentation_outline.md` into actual 'slides' I want a preview as an artifact so I can comment on it, but eventually when I present I want it to be a page hosted on GitHub pages. It should appear like 'slides', including diagrams, code snippets, charts, etc. Leave a placeholder (or maybe just a link) for the recorded-demo fallback video.
+
+**Phase 10b - Script** Provide a script (markdown file) that I can just read off to accompany the entire presentation (slides + demo).
 
 **Phase 11 — Verify & hand back.** Do a clean end-to-end run from scratch (fresh `pnpm install`, build, run `demo.sh`) to prove it works offline. Give me: the final token numbers, a one-paragraph "how to run the demo" note, and a checklist of what's left for me (record the dry-run video, fill any slide media).
 

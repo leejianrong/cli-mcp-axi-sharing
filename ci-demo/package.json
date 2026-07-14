@@ -1,0 +1,36 @@
+{
+  "name": "ci-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Teaching prop for the CLI vs MCP vs AXI talk: one offline CI/CD pipeline-runs app, three interfaces.",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "ci-cli": "./dist/cli.js",
+    "ci-mcp": "./dist/mcp-server.js",
+    "ci": "./dist/axi.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "cli": "node dist/cli.js",
+    "mcp": "node dist/mcp-server.js",
+    "axi": "node dist/axi.js",
+    "capture": "node scripts/capture.mjs",
+    "token-diff": "node scripts/token-diff.mjs",
+    "agent-run": "node scripts/agent-run.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "@toon-format/toon": "^2.3.0",
+    "axi-sdk-js": "file:./vendor/axi-sdk-js",
+    "gpt-tokenizer": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

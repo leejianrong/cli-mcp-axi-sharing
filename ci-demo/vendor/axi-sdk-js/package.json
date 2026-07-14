@@ -1,0 +1,21 @@
+{
+  "name": "axi-sdk-js",
+  "version": "0.1.8",
+  "description": "Vendored build of axi-sdk-js — shared Node primitives for AXI CLIs.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}

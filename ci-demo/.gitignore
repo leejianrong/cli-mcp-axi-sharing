@@ -1,0 +1,7 @@
+node_modules/
+# only the project's own build output — NOT the committed vendor/axi-sdk-js/dist
+/dist/
+/out/
+recording/*.mp4
+recording/*.cast
+*.log

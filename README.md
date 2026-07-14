@@ -1,19 +1,19 @@
 # Apps Agents Love: CLI vs MCP vs AXI
 
 An internal ~30-minute talk and live demo about the interface you put between an AI
-agent and your system — and why that choice, not the protocol, quietly decides the
-agent's token bill, speed, and reliability. One tiny offline CI/CD app is exposed
-three ways (a verbose **CLI**, an **MCP** server, and a principled **AXI** command),
-and we watch the same task's payload shrink across them.
+agent and your system. That choice, not the protocol behind it, quietly decides the
+agent's token bill, speed, and reliability. One tiny offline CI/CD app gets exposed
+three ways: a verbose CLI, an MCP server, and a principled AXI command. We run the
+same task through each and watch the payload shrink.
 
 **Slides:** https://leejianrong.github.io/cli-mcp-axi-sharing/
-**Talk plan:** [`docs/`](docs/) — [discovery notes](docs/discovery_notes.md), [slide outline](docs/presentation_outline.md), [demo runbook](docs/live_demo_script.md), [read-off script](docs/presentation_script.md).
+**Talk plan:** [`docs/`](docs/): [discovery notes](docs/discovery_notes.md), [slide outline](docs/presentation_outline.md), [demo runbook](docs/live_demo_script.md), [read-off script](docs/presentation_script.md).
 
 ## The measured result
 
-The per-call payload for one task — _"list the pipeline runs that are failing"_ —
-counted with `gpt-tokenizer` (an approximation of Claude's tokenizer, so read the
-gaps, not the exact digits):
+The per-call payload for one task, _"list the pipeline runs that are failing"_,
+counted with `gpt-tokenizer`. That tokenizer approximates Claude's, so read the
+gaps, not the exact digits:
 
 | Interface | Payload tokens | vs MCP |
 |---|---|---|
@@ -28,7 +28,7 @@ while AXI barely moves.
 ## Quick start
 
 Everything lives in [`ci-demo/`](ci-demo/) and runs fully offline (local JSON data,
-a local tokenizer — no network in any demo path). Node ≥ 20 and pnpm (via
+a local tokenizer, no network in any demo path). Node ≥ 20 and pnpm (via
 `corepack enable pnpm`).
 
 ```bash
@@ -47,11 +47,11 @@ node scripts/token-diff.mjs                # the payload token comparison
 
 ## Running the demo on stage
 
-From `ci-demo/`, `./demo.sh` drives the four live steps on the space bar — CLI wall,
-MCP schema tax, AXI output (plus `--full`), then the token diff. `source aliases.sh`
-first if you want the short commands (`ci`, `ci-cli`, `cap`, `t`). If anything
-hiccups, cut to the recording rather than debugging; the full runbook and fallback
-plan are in [`docs/live_demo_script.md`](docs/live_demo_script.md).
+From `ci-demo/`, `./demo.sh` drives the four live steps on the space bar: the CLI
+wall, the MCP schema tax, AXI output (plus `--full`), then the token diff. Run
+`source aliases.sh` first if you want the short commands (`ci`, `ci-cli`, `cap`,
+`t`). If anything hiccups, cut to the recording rather than debugging. The full
+runbook and fallback plan are in [`docs/live_demo_script.md`](docs/live_demo_script.md).
 
 ## The one online step
 

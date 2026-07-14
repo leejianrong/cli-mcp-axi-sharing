@@ -74,10 +74,10 @@
 
 ## Slide 8b — The 4 marquee principles, in code (2:00)
 - **Layout:** **Before/after code snippets**, side by side (or stacked). One compact pair per principle — this is the "how" now that we're not typing live. If it's cramped, split into two slides (8b-i efficiency, 8b-ii aggregates+truncation). Syntax-highlighted, ≥18pt.
-- **The four transformations (real `axi-sdk-js` APIs):**
-  - **P1 Token-efficient output:** `console.log(JSON.stringify(runs, null, 2))` → `console.log(renderOutput({ runs }))` _(TOON, ~40% smaller)_.
+- **The four transformations (real `axi-sdk-js` APIs, lifted from `ci-demo/src/axi.ts`):**
+  - **P1 Token-efficient output:** `console.log(JSON.stringify(runs, null, 2))` → `console.log(renderOutput(output))` _(TOON, ~40% smaller)_.
   - **P2 Minimal schema:** return the full 10+ field object → `runs.map(r => ({ id, status, branch, logs }))` _(4 fields the task needs)_.
-  - **P4 Pre-computed aggregates:** _(nothing)_ → `summary: summarize(all)` → `"8 runs · 3 failed · 2 running · 3 passed"` _(no extra round-trip)_.
+  - **P4 Pre-computed aggregates:** _(nothing)_ → `summary: summarize(loadRuns())` → `"8 runs · 3 failed · 2 running · 3 passed"` _(no extra round-trip)_.
   - **P3 Content truncation:** `logs: r.logs` → `logs: full ? r.logs : truncate(r.logs, 120)` + a `--full` flag _(size hint, escape hatch)_.
 - **Talking points:**
   - "Four small edits. Each maps to a principle. Watch the output shrink in the demo."
@@ -101,14 +101,30 @@
 - **Speaker note:** this is a *run*, not a build — narrate the effect, not the typing. If any command wobbles, **cut to the recording** immediately (script has the trigger + timestamps). Don't debug live.
 
 ## Slide 11 — Results: the live token diff (1:00)
-- **Layout:** Big, bold results table populated from the tokenizer script output (fill in the real numbers after your dry run). Columns: Interface · Payload tokens · vs CLI. Bar chart if the deck supports it.
+- **Layout:** Big, bold results table (bar chart if the deck supports it). Columns: Interface · Payload tokens · vs MCP. These are the **real measured numbers** from `scripts/token-diff.mjs` on the seeded data:
+
+  | Interface | Payload tokens | vs MCP |
+  |---|---|---|
+  | MCP (6 schemas + result) | **2,655** | baseline |
+  | CLI (verbose JSON) | **1,358** | −49% |
+  | AXI (TOON, 4 fields, truncated) | **236** | **−91%** (−83% vs CLI) |
+
 - **Talking points:**
-  - Read the numbers: MCP payload is the heaviest (schemas + verbose result); AXI is the lightest; CLI in between.
-  - **Say the honest framing:** "This is the *per-call payload* difference, measured live with an approximate tokenizer — read the *direction and magnitude*. But an agent doesn't call a tool once…"
+  - Read the numbers: the MCP payload is heaviest (six schemas plus a verbose result), AXI is the lightest by a wide margin, CLI sits in between.
+  - **Say the honest framing:** "This is the *per-call payload* difference, measured live with an approximate tokenizer — read the *direction and magnitude*, not the third digit. But an agent doesn't call a tool once…"
+  - One honest aside worth making: here the CLI is only about half of MCP, not the tiny fraction you might expect. That's because our server ships *six* tools. The schema tax scales with tool count — a real server with thirty tools pushes MCP far higher and widens that gap. AXI's −91% barely moves.
 - **Transition:** "…so what happens across a whole task? Let me show you a real agent doing exactly this."
 
 ## Slide 12 — Real agent, our app: the recorded run (2:30)
-- **Layout:** Embedded **pre-recorded video** (or GIF) of a genuine agent (Claude) completing "list the failing runs" through each interface, side by side or in sequence. Overlay/caption the live counters: **turns · total tokens · cost**. Below the video, a small summary table of the three runs.
+- **Layout:** Embedded **pre-recorded video** (or GIF) of a genuine agent (Claude) completing "list the failing runs" through each interface, side by side or in sequence. Overlay/caption the live counters: **turns · total tokens · cost**. Below the video, the summary table of the three runs:
+
+  | Interface | Turns | Total tokens | Cost (USD) |
+  |---|---|---|---|
+  | CLI | _TODO_ | _TODO_ | _TODO_ |
+  | MCP | _TODO_ | _TODO_ | _TODO_ |
+  | AXI | _TODO_ | _TODO_ | _TODO_ |
+
+  > **Fill these in** by running `node scripts/agent-run.mjs` (from `ci-demo/`, with API credentials) before the talk — it prints exactly this table. It's the one non-offline step; run it once, capture the numbers and the screen recording, then it never touches the network again. Expect the same shape as slide 13's published benchmark: MCP heaviest on turns *and* tokens, AXI lowest on both.
 - **Talking points:**
   - "This is not a live agent — it's a recording, so the numbers are stable — but it *is* a real agent doing the real task on the app we just ran."
   - Walk the counters: MCP burns the most tokens *and* the most turns (schema tax charged every round-trip); AXI finishes in fewer turns with far fewer tokens; CLI cheap but wobblier.

@@ -25,8 +25,9 @@ ci-demo/
   recording/demo-run.mp4    # (or asciinema .cast) — full dry-run capture = your fallback
   recording/agent-run.mp4   # real agent (Claude) doing the task via each interface — PLAYED on slide 12
   scripts/agent-run.mjs     # drives a real agent 3× (once per interface) to PRODUCE agent-run.mp4
-  package.json              # deps: axi-sdk-js (linked), @toon-format/toon, gpt-tokenizer,
-                            #       @modelcontextprotocol/sdk
+  vendor/axi-sdk-js/        # committed build of axi-sdk-js (see its README for provenance)
+  package.json              # deps: axi-sdk-js (file:./vendor/axi-sdk-js), @toon-format/toon,
+                            #       gpt-tokenizer, @modelcontextprotocol/sdk
 ```
 
 ### Data shape (`data/runs.json`) — make JSON look heavy
@@ -57,7 +58,7 @@ Seed ~8 runs: mix of `failed` (3), `running` (2), `success` (3). This makes the 
 This is what ships and what you run on stage. The commented principle labels map 1:1 to the slide-8b snippets:
 ```ts
 import { renderOutput } from "axi-sdk-js";          // TOON encode under the hood
-import { loadRuns, filterByStatus, summarize } from "./core.js";
+import { loadRuns, filterByStatus, summarize, truncate } from "./core.js";
 
 const status = getFlag("--status");                 // e.g. "failed"
 const full = hasFlag("--full");
@@ -94,8 +95,8 @@ This is the "genuine agent on screen" moment. Produce it once, offline of the ta
 
 ## 1. Prerequisites checklist (verify morning-of)
 
-- [ ] Node ≥ 20 and `pnpm` installed; `pnpm install` already run in `ci-demo/` (no install lag on stage).
-- [ ] `axi-sdk-js` built and linked (`pnpm --filter axi-sdk-js build`, then linked into `ci-demo`).
+- [ ] Node ≥ 20 and `pnpm` installed (via `corepack enable pnpm`); `pnpm install` already run in `ci-demo/` (no install lag on stage).
+- [ ] `pnpm build` run so `dist/` exists. `axi-sdk-js` is **vendored** (`ci-demo/vendor/axi-sdk-js`), so there's no separate SDK build/link step — `pnpm install` links it via `file:`.
 - [ ] Dependencies present: `@toon-format/toon`, `gpt-tokenizer`, `@modelcontextprotocol/sdk`.
 - [ ] All three interfaces run clean: `ci-cli list --status failed`, `ci-mcp` capture, and `ci list --status failed`.
 - [ ] `scripts/capture.mjs` and `scripts/token-diff.mjs` run clean and produce numbers.
@@ -157,14 +158,16 @@ ci list --status failed > out/axi-output.txt
 ```bash
 node scripts/token-diff.mjs
 ```
-**Audience sees** (illustrative — replace with your real dry-run numbers):
+**Audience sees** (the real numbers from the dry run, on the seeded data):
 ```
 Payload tokens for "list failing runs" (gpt-tokenizer, approx):
-  MCP  (6 schemas + result) ......  4,120   (baseline)
-  CLI  (verbose JSON) ............  1,780   -57% vs MCP
-  AXI  (TOON, 4 fields, trunc) ....   410   -90% vs MCP,  -77% vs CLI
+  MCP  (6 schemas + result) .  2,655   (baseline)
+  CLI  (verbose JSON) .......  1,358   -49% vs MCP
+  AXI  (TOON, 4 fields, trunc) .    236   -91% vs MCP,  -83% vs CLI
 ```
 **Say the honest line:** "This is the *per-call payload* difference, measured live with an approximate tokenizer — so read the *direction and magnitude*, not the third digit. But an agent never calls a tool just once…" → advance to slide 12.
+
+> Note the CLI lands at roughly half of MCP, not a tiny fraction — because this server only ships six tools. The schema tax scales with tool count; a real thirty-tool server pushes MCP much higher. AXI's −91% barely moves either way. Say that out loud if a lead asks why CLI isn't further behind.
 
 ### Step 5 — Play the recorded real-agent run (~2.5 min) [slide 12, from video]
 Leave the terminal; this beat is **played from the deck**, not run live.

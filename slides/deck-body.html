@@ -1,0 +1,920 @@
+<title>Apps Agents Love: CLI vs MCP vs AXI</title>
+<style>
+  /* ============================================================
+     "Apps Agents Love: CLI vs MCP vs AXI"
+     Instrument-panel deck — deep blue-ink, cyan hero, amber foil.
+     Self-contained: no external fonts, scripts, images, or requests.
+     ============================================================ */
+  :root {
+    --bg: #0F1319;
+    --surface: #161B24;
+    --surface-2: #1D2430;
+    --border: #29323F;
+    --text: #E9ECF1;
+    --muted: #9BA6B4;
+    --axi: #35D0BA;   /* cyan-teal: the hero / efficiency / the win */
+    --tax: #F2B84B;   /* amber: token weight / the tax / cost */
+    --tax-dim: #8A7A4E;
+    --fail: #F26D6D;
+    --pass: #5FC58C;
+    --font-display: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  #viewport {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Fixed design stage — everything is laid out at 1280x720 and scaled
+     uniformly to the viewport, so it reads identically on any projector. */
+  #stage {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    background:
+      radial-gradient(1200px 700px at 78% -10%, rgba(53,208,186,0.045), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    transform-origin: center center;
+    overflow: hidden;
+  }
+
+  /* thin top progress bar — reads like a gauge fill */
+  .progress {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--surface-2);
+    z-index: 40;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 6%;
+    background: linear-gradient(90deg, #1D8B7C, var(--axi));
+    box-shadow: 0 0 12px rgba(53,208,186,0.55);
+    transition: width .45s cubic-bezier(.2,.7,.2,1);
+  }
+
+  /* corner registration ticks — quiet instrument detail */
+  #stage::before, #stage::after {
+    content: "";
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid var(--border);
+    opacity: .7;
+    z-index: 30;
+    pointer-events: none;
+  }
+  #stage::before { top: 26px; left: 26px; border-right: 0; border-bottom: 0; }
+  #stage::after  { top: 26px; right: 26px; border-left: 0; border-bottom: 0; }
+
+  /* ---- slides ---- */
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 72px 80px 84px;
+    display: none;
+    flex-direction: column;
+  }
+  .slide.active { display: flex; animation: slideIn .4s ease both; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .kicker .dot { color: var(--axi); }
+
+  h1.title {
+    font-size: 92px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+    margin: 0;
+  }
+  h2.head {
+    font-size: 46px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 26px;
+    max-width: 26ch;
+  }
+  .accent { color: var(--axi); }
+  .amber { color: var(--tax); }
+  .lead {
+    font-size: 24px;
+    line-height: 1.5;
+    color: var(--text);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .muted { color: var(--muted); }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .fill { flex: 1; }
+
+  /* ---- footer ---- */
+  .deck-footer {
+    position: absolute;
+    left: 80px; right: 80px; bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--muted);
+    z-index: 35;
+  }
+  .foot-title { letter-spacing: .04em; }
+  .foot-num { letter-spacing: .1em; }
+  .foot-num b { color: var(--text); font-weight: 600; }
+  /* tiny echo of the signature payload bar — the deck's mark */
+  .foot-echo { display: flex; flex-direction: column; gap: 3px; width: 64px; opacity: .85; }
+  .foot-echo i { display: block; height: 3px; border-radius: 2px; }
+  .foot-echo i:nth-child(1) { width: 100%; background: var(--tax-dim); }
+  .foot-echo i:nth-child(2) { width: 51%; background: var(--tax-dim); }
+  .foot-echo i:nth-child(3) { width: 9%;  background: var(--axi); }
+
+  /* ============ shared components ============ */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .pill.win { border-color: var(--axi); color: var(--axi); }
+  .pill.cost { border-color: var(--tax); color: var(--tax); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 34px; align-items: stretch; }
+  .col-title { font-size: 15px; font-family: var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+
+  ul.clean { list-style: none; margin: 0; padding: 0; }
+  ul.clean li { font-size: 21px; line-height: 1.4; padding: 8px 0 8px 26px; position: relative; }
+  ul.clean li::before { content: ""; position: absolute; left: 4px; top: 17px; width: 8px; height: 8px; border-radius: 2px; background: var(--muted); }
+  ul.clean li.good::before { background: var(--pass); }
+  ul.clean li.bad::before { background: var(--fail); }
+
+  /* boxes + flow arrows (instrument-panel signal path) */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 26px; }
+  .node {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px 30px;
+    text-align: center;
+    min-width: 200px;
+  }
+  .node .n-label { font-family: var(--font-mono); font-size: 14px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .node .n-title { font-size: 28px; font-weight: 700; margin-top: 8px; }
+  .node.hot {
+    border-color: var(--axi);
+    box-shadow: 0 0 0 1px var(--axi), 0 0 34px rgba(53,208,186,0.22);
+    background: linear-gradient(180deg, rgba(53,208,186,0.08), var(--surface));
+  }
+  .node.hot .n-title { color: var(--axi); }
+  .arrow { font-family: var(--font-mono); font-size: 40px; color: var(--muted); line-height: 1; }
+
+  /* tables */
+  table.grid { width: 100%; border-collapse: collapse; font-size: 20px; }
+  table.grid th, table.grid td { text-align: left; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  table.grid th { font-family: var(--font-mono); font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  table.grid td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+  table.grid tr.hot td { background: rgba(53,208,186,0.07); color: var(--axi); font-weight: 700; }
+  table.grid tr.hot td .sub { color: var(--axi); }
+  table.grid .q { color: var(--muted); }
+
+  /* code snippets */
+  pre.code {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    line-height: 1.5;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  pre.code.before { color: var(--muted); border-style: dashed; }
+  pre.code .add { color: var(--axi); }
+  .snip-label { font-family: var(--font-mono); font-size: 14px; color: var(--muted); letter-spacing: .06em; }
+  .snip-label b { color: var(--text); }
+
+  /* ---- video / demo placeholders ---- */
+  .placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    background: repeating-linear-gradient(45deg, var(--surface) 0 22px, var(--surface-2) 22px 44px);
+    text-align: center;
+    gap: 18px;
+  }
+  .placeholder .big { font-size: 40px; font-weight: 800; letter-spacing: -0.01em; }
+  .placeholder .cue { font-size: 64px; }
+  .videobox {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 380px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #000;
+    display: block;
+  }
+  .videobox[poster] { object-fit: cover; }
+
+  /* ============ signature: the payload bar (slide 11) ============ */
+  .payload { display: flex; flex-direction: column; gap: 20px; margin: 8px 0 4px; }
+  .pbar-row { display: grid; grid-template-columns: 130px 1fr 150px; align-items: center; gap: 20px; }
+  .pbar-label { font-family: var(--font-mono); font-size: 20px; color: var(--text); }
+  .pbar-label small { display: block; color: var(--muted); font-size: 13px; letter-spacing: .04em; }
+  .pbar-track {
+    position: relative;
+    height: 42px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  /* faint tick marks across the track — measurement instrument */
+  .pbar-track::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(155,166,180,0.12) calc(10% - 1px) 10%);
+    pointer-events: none;
+  }
+  .pbar-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 5px 0 0 5px;
+    transition: width 1s cubic-bezier(.2,.8,.2,1);
+  }
+  .pbar-fill.tax { background: linear-gradient(90deg, #C99A3C, var(--tax)); }
+  .pbar-fill.tax-dim { background: linear-gradient(90deg, #6E6238, var(--tax-dim)); }
+  .pbar-fill.win { background: linear-gradient(90deg, #1E9C8B, var(--axi)); box-shadow: 0 0 20px rgba(53,208,186,0.5); }
+  .pbar-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 34px; font-weight: 700; text-align: right; }
+  .pbar-num small { display: block; font-size: 14px; font-weight: 500; }
+  .pbar-num.tax-c { color: var(--tax); }
+  .pbar-num.dim-c { color: var(--tax-dim); }
+  .pbar-num.win-c { color: var(--axi); }
+
+  /* principle chips (slide 8) */
+  .groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .group h3 { font-family: var(--font-mono); font-size: 16px; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 14px; color: var(--muted); }
+  .group.eff h3 { color: var(--axi); }
+  .chip {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    margin-bottom: 10px;
+    font-size: 17px;
+    line-height: 1.3;
+  }
+  .chip b { font-family: var(--font-mono); color: var(--muted); margin-right: 6px; font-size: 15px; }
+  .chip.mark { border-color: var(--axi); box-shadow: 0 0 0 1px rgba(53,208,186,0.4); }
+  .chip.mark b { color: var(--axi); }
+
+  /* decision guide (slide 14) */
+  .decide { display: grid; grid-template-columns: 150px 1fr; gap: 0; }
+  .decide .drow { display: contents; }
+  .decide .dwho { font-family: var(--font-mono); font-size: 26px; font-weight: 700; padding: 20px 20px 20px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; }
+  .decide .dwhen { padding: 20px 0; border-bottom: 1px solid var(--border); font-size: 21px; line-height: 1.45; display: flex; align-items: center; }
+  .decide .cli-c { color: var(--text); }
+  .decide .mcp-c { color: var(--tax); }
+  .decide .axi-c { color: var(--axi); }
+
+  /* misc */
+  .note {
+    font-size: 17px;
+    line-height: 1.45;
+    color: var(--muted);
+    border-left: 2px solid var(--tax);
+    padding-left: 16px;
+    max-width: 78ch;
+  }
+  .note.win { border-color: var(--axi); }
+  .callout {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    color: var(--tax);
+    background: rgba(242,184,75,0.08);
+    border: 1px solid rgba(242,184,75,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .stat-big { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 60px; font-weight: 800; line-height: 1; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .spacer-s { height: 18px; }
+  .spacer-m { height: 28px; }
+
+  /* terminal mock (slide 4) */
+  .term {
+    background: #0B0E13;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 16px 18px;
+    overflow: hidden;
+    height: 100%;
+  }
+  .term .prompt { color: var(--axi); }
+  .term .dim { color: var(--muted); }
+  .term .k { color: var(--tax); }
+  .term .fail { color: var(--fail); }
+  .term .s { color: var(--muted); }
+
+  /* resources (slide 15) */
+  .res { display: flex; gap: 12px; flex-wrap: wrap; }
+  .res .pill b { color: var(--text); }
+
+  /* schema-tax stack (slide 5) */
+  .ctxwin { border: 1px solid var(--axi); border-radius: 10px; padding: 12px; background: rgba(53,208,186,0.05); }
+  .schema-chip { font-family: var(--font-mono); font-size: 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; margin-bottom: 7px; color: var(--tax); }
+  .schema-chip:last-child { margin-bottom: 0; }
+
+  /* qa list (slide 16) */
+  .qa { font-size: 19px; line-height: 1.5; }
+  .qa dt { color: var(--text); font-weight: 600; margin-top: 14px; }
+  .qa dt::before { content: "Q  "; color: var(--tax); font-family: var(--font-mono); }
+  .qa dd { color: var(--muted); margin: 4px 0 0; }
+  .qa dd::before { content: "A  "; color: var(--axi); font-family: var(--font-mono); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide.active { animation: none; }
+    .progress-fill, .pbar-fill { transition: none; }
+  }
+</style>
+
+<div id="viewport">
+  <div id="stage">
+    <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+    <!-- ============ SLIDE 1 — Title ============ -->
+    <section class="slide" data-slide="1" id="slide-1">
+      <p class="kicker">Internal Tech Talk <span class="dot">·</span> 2026-07-15</p>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
+        <h1 class="title">Apps Agents<br>Love</h1>
+        <div class="spacer-m"></div>
+        <div class="mono" style="font-size:28px;letter-spacing:.04em;color:var(--muted);">
+          CLI <span class="muted">vs</span> MCP <span class="muted">vs</span> <span class="accent">AXI</span>
+        </div>
+        <div class="spacer-m"></div>
+        <p class="lead" style="max-width:52ch;">How the interface you give an agent decides its
+          <span class="accent">cost</span>, <span class="accent">speed</span>, and <span class="accent">reliability</span>.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 2 — Hook ============ -->
+    <section class="slide" data-slide="2" id="slide-2">
+      <h2 class="head">An agent is only as good as the tools you hand it</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;gap:44px;">
+        <div class="flow">
+          <div class="node">
+            <div class="n-label">LLM in a loop</div>
+            <div class="n-title">Agent</div>
+          </div>
+          <div class="arrow">&rarr;</div>
+          <div class="node hot">
+            <div class="n-label">the whole ballgame</div>
+            <div class="n-title">Interface</div>
+          </div>
+          <div class="arrow">&rarr;</div>
+          <div class="node">
+            <div class="n-label">API · files · commands</div>
+            <div class="n-title">Your system</div>
+          </div>
+        </div>
+        <p class="lead" style="text-align:center;margin:0 auto;">Same model, same task &mdash; swap the middle box and
+          <span class="amber">cost, turns, and success swing 2&ndash;3&times;</span>.</p>
+        <div class="row" style="justify-content:center;">
+          <span class="pill">CLI</span><span class="pill">MCP</span><span class="pill win">AXI &mdash; the new one</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 3 — What it costs ============ -->
+    <section class="slide" data-slide="3" id="slide-3">
+      <h2 class="head">What an agent actually pays for</h2>
+      <div class="fill two-col" style="align-items:center;">
+        <div>
+          <div class="flow" style="flex-direction:column;gap:14px;align-items:stretch;">
+            <div class="node" style="min-width:0;text-align:left;">
+              <div class="n-label">step 1</div><div class="n-title" style="font-size:22px;">Read context</div>
+            </div>
+            <div class="arrow" style="text-align:center;font-size:28px;">&darr;</div>
+            <div class="node" style="min-width:0;text-align:left;">
+              <div class="n-label">step 2</div><div class="n-title" style="font-size:22px;">Call a tool</div>
+            </div>
+            <div class="arrow" style="text-align:center;font-size:28px;">&darr;</div>
+            <div class="node" style="min-width:0;text-align:left;">
+              <div class="n-label">step 3 &mdash; back into context &#8635;</div><div class="n-title" style="font-size:22px;">Read the output</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="col-title">Three things you pay for, every task</p>
+          <ul class="clean">
+            <li><b class="amber">Input tokens</b> &mdash; everything the model must read: tool definitions + results</li>
+            <li><b class="amber">Turns</b> &mdash; round-trips; each one re-sends the whole context</li>
+            <li><b class="amber">Failures</b> &mdash; retries, or plain wrong answers</li>
+          </ul>
+          <div class="spacer-s"></div>
+          <div class="callout">Tokens are charged <b>per turn</b> &mdash; a bloated interface is taxed repeatedly, not once.</div>
+          <div class="spacer-s"></div>
+          <p class="note win">Hold three numbers &mdash; tokens, turns, success. They&rsquo;re our scorecard for all three approaches.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 4 — CLI ============ -->
+    <section class="slide" data-slide="4" id="slide-4">
+      <p class="kicker">Contender <span class="dot">1</span> of 3</p>
+      <h2 class="head">The CLI &mdash; built for humans at a terminal</h2>
+      <div class="fill two-col">
+        <div class="term">
+          <div><span class="prompt">$</span> ci-cli list --status <span class="k">failed</span></div>
+          <div class="dim">[</div>
+          <div>&nbsp;&nbsp;{ <span class="dim">"id":</span> "run_8f2a", <span class="dim">"status":</span> <span class="fail">"failed"</span>,</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">"branch":</span> "feat/checkout-retry",</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">"commit": { "sha": "a1b9c3d", "message":</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">"retry flaky checkout", "author": "priya" },</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">"trigger": "push", "duration_seconds": 342,</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">"jobs": [ {...}, {...}, {...} ],</span></div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim">"logs": "</span><span class="s">~1500 chars of log tail&hellip;</span><span class="dim">" },</span></div>
+          <div class="s">&nbsp;&nbsp;&hellip; and it continues, and continues &hellip;</div>
+          <div class="dim">]</div>
+        </div>
+        <div>
+          <p class="col-title">The trade</p>
+          <ul class="clean">
+            <li class="good">Cheap &mdash; no schema tax; the tool isn&rsquo;t &ldquo;described&rdquo; up front</li>
+            <li class="good">Universal, composable, works offline</li>
+            <li class="bad">Output is human-shaped &mdash; agent parses verbose prose/JSON</li>
+            <li class="bad">Action and observation split &mdash; extra turns to see what happened</li>
+            <li class="bad">Brittle errors; poor discoverability (agent guesses flags)</li>
+          </ul>
+          <div class="spacer-s"></div>
+          <div class="row"><span class="pill">cheap</span><span class="pill cost">but ~86% success</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 5 — MCP ============ -->
+    <section class="slide" data-slide="5" id="slide-5">
+      <p class="kicker">Contender <span class="dot">2</span> of 3</p>
+      <h2 class="head">MCP &mdash; a structured menu, loaded into context</h2>
+      <div class="fill two-col">
+        <div>
+          <p class="col-title">Server exposes N tools &rarr; all schemas injected</p>
+          <div class="ctxwin">
+            <div class="mono muted" style="font-size:13px;margin-bottom:8px;">CONTEXT WINDOW &mdash; charged every turn</div>
+            <div class="schema-chip">list_runs &nbsp;{ inputSchema, description }</div>
+            <div class="schema-chip">get_run &nbsp;{ inputSchema, description }</div>
+            <div class="schema-chip">list_jobs &nbsp;{ inputSchema, description }</div>
+            <div class="schema-chip">get_logs &nbsp;{ inputSchema, description }</div>
+            <div class="schema-chip">retry_run &nbsp;{ inputSchema, description }</div>
+            <div class="schema-chip">cancel_run &nbsp;{ inputSchema, description }</div>
+          </div>
+          <div class="spacer-s"></div>
+          <div class="callout">The schema tax: ~30 tools &rarr; <b>~185K tokens / task</b></div>
+        </div>
+        <div>
+          <p class="col-title">The trade</p>
+          <ul class="clean">
+            <li class="good">Structured I/O, typed arguments</li>
+            <li class="good">Discoverable &mdash; schemas advertise what&rsquo;s available</li>
+            <li class="good">Ecosystem momentum</li>
+            <li class="bad">Schema tax &mdash; cost scales with tool count</li>
+            <li class="bad">Lazy-loading (tool search) trades tokens for <em>more turns</em></li>
+          </ul>
+          <div class="spacer-s"></div>
+          <div class="row"><span class="pill">reliable-ish</span><span class="pill cost">2&ndash;3&times; the cost &mdash; $0.15 vs $0.05</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 6 — Scorecard / gap ============ -->
+    <section class="slide" data-slide="6" id="slide-6">
+      <h2 class="head">The scorecard so far</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
+        <table class="grid">
+          <thead>
+            <tr><th>Dimension</th><th>CLI</th><th>MCP</th><th class="accent">AXI</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Tokens / payload</td><td class="amber">low</td><td class="amber">high</td><td class="q">?</td></tr>
+            <tr><td>Cost / task</td><td>~$0.05</td><td class="amber">~$0.15</td><td class="q">?</td></tr>
+            <tr><td>Turns</td><td>few</td><td class="amber">many</td><td class="q">?</td></tr>
+            <tr><td>Success</td><td class="amber">~86%</td><td>~87%</td><td class="q">?</td></tr>
+            <tr><td>Discoverability</td><td class="amber">poor</td><td>good</td><td class="q">?</td></tr>
+          </tbody>
+        </table>
+        <div class="spacer-m"></div>
+        <p class="lead">It reads like a trade-off &mdash; pick <span class="amber">cheap</span> <em>or</em> <span class="amber">reliable</span>.
+          The premise of AXI: <span class="accent">that&rsquo;s a false choice.</span></p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 7 — AXI thesis ============ -->
+    <section class="slide" data-slide="7" id="slide-7">
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
+        <h1 class="title" style="font-size:66px;max-width:20ch;">AXI is <span class="accent">design principles</span>, not a new protocol.</h1>
+        <div class="spacer-m"></div>
+        <p class="lead"><b>Agent eXperience Interface</b> &mdash; agent-native CLI tools that treat
+          <span class="accent">token budget as a first-class constraint</span>.</p>
+        <div class="spacer-s"></div>
+        <p class="lead muted">The goal: the reliability of MCP (structured, discoverable) at the cost profile of a CLI.
+          It&rsquo;s <b>10 principles + reference implementations</b> &mdash; not a runtime you install.</p>
+        <div class="spacer-m"></div>
+        <p class="note">Honesty note: it&rsquo;s a young, opinionated project and the headline benchmarks are published by its author.
+          Treat the <b>principles</b> as solid and the <b>exact numbers</b> as a strong hypothesis &mdash; we verify the direction ourselves, live.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 8 — 10 principles ============ -->
+    <section class="slide" data-slide="8" id="slide-8">
+      <h2 class="head">Ten principles, three groups</h2>
+      <div class="fill">
+        <div class="groups">
+          <div class="group eff">
+            <h3>Efficiency</h3>
+            <span class="chip mark"><b>P1</b>Token-efficient output &mdash; TOON, ~40% smaller than JSON</span>
+            <span class="chip mark"><b>P2</b>Minimal default schemas &mdash; 3&ndash;4 fields, not 10+</span>
+            <span class="chip mark"><b>P3</b>Content truncation with a <span class="mono">--full</span> escape hatch</span>
+          </div>
+          <div class="group">
+            <h3>Robustness</h3>
+            <span class="chip mark"><b>P4</b>Pre-computed aggregates &mdash; counts up front, no round-trip</span>
+            <span class="chip"><b>P5</b>Definitive empty states &mdash; &ldquo;0 results&rdquo;, not silence</span>
+            <span class="chip"><b>P6</b>Structured errors, exit codes, no interactive prompts</span>
+          </div>
+          <div class="group">
+            <h3>Discoverability</h3>
+            <span class="chip"><b>P7</b>Ambient context via hooks / skills</span>
+            <span class="chip"><b>P8</b>Content-first &mdash; no args &rarr; live data, not help</span>
+            <span class="chip"><b>P9</b>Contextual next-step suggestions</span>
+            <span class="chip"><b>P10</b>Consistent <span class="mono">--help</span> everywhere</span>
+          </div>
+        </div>
+        <div class="spacer-s"></div>
+        <p class="note win">The four <span class="accent">outlined</span> chips are the marquee ones &mdash; the efficiency cluster plus aggregates.
+          We&rsquo;ll see them in code next, then in action on a real app.
+          <span class="muted">TOON = a compact, tabular text encoding: CSV&rsquo;s density with JSON&rsquo;s structure.</span></p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 8b — Marquee principles in code ============ -->
+    <section class="slide" data-slide="8b" id="slide-8b">
+      <h2 class="head" style="margin-bottom:18px;">The four marquee principles, in code</h2>
+      <div class="fill" style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:20px 30px;">
+        <div>
+          <p class="snip-label"><b>P1</b> &mdash; token-efficient output <span class="accent">(TOON, ~40% smaller)</span></p>
+          <pre class="code before">console.log(JSON.stringify(runs, null, 2))</pre>
+          <pre class="code"><span class="add">console.log(renderOutput(output))</span></pre>
+        </div>
+        <div>
+          <p class="snip-label"><b>P2</b> &mdash; minimal default schema <span class="accent">(4 fields the task needs)</span></p>
+          <pre class="code before">return runs   // 10+ fields per object</pre>
+          <pre class="code"><span class="add">runs.map(r =&gt; ({ id, status, branch, logs }))</span></pre>
+        </div>
+        <div>
+          <p class="snip-label"><b>P4</b> &mdash; pre-computed aggregate <span class="accent">(no extra round-trip)</span></p>
+          <pre class="code before">// (nothing &mdash; agent burns a turn counting)</pre>
+          <pre class="code"><span class="add">summary: summarize(loadRuns())</span>  <span style="color:var(--muted)">// "8 runs · 3 failed &hellip;"</span></pre>
+        </div>
+        <div>
+          <p class="snip-label"><b>P3</b> &mdash; content truncation <span class="accent">(size hint + escape hatch)</span></p>
+          <pre class="code before">logs: r.logs</pre>
+          <pre class="code"><span class="add">logs: full ? r.logs : truncate(r.logs, 120)</span></pre>
+        </div>
+      </div>
+      <p class="note" style="margin-top:14px;">Four small edits, one changed line each &mdash; lifted verbatim from the shipped <span class="mono">src/axi.ts</span>. Watch the output shrink in the demo.</p>
+    </section>
+
+    <!-- ============ SLIDE 9 — Demo setup ============ -->
+    <section class="slide" data-slide="9" id="slide-9">
+      <h2 class="head">Demo &mdash; one app, three front doors</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;gap:46px;">
+        <div class="flow">
+          <div class="node" style="min-width:230px;">
+            <div class="n-label">offline CI/CD pipeline runs</div>
+            <div class="n-title"><span class="mono">ci</span> core</div>
+            <div class="mono muted" style="font-size:13px;margin-top:6px;">loadRuns · filterByStatus · summarize</div>
+          </div>
+          <div class="arrow">&rarr;</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="node" style="min-width:180px;padding:14px 20px;"><div class="n-title" style="font-size:22px;">CLI</div><div class="mono muted" style="font-size:13px;">verbose JSON</div></div>
+            <div class="node" style="min-width:180px;padding:14px 20px;"><div class="n-title" style="font-size:22px;">MCP</div><div class="mono muted" style="font-size:13px;">6 tool schemas</div></div>
+            <div class="node hot" style="min-width:180px;padding:14px 20px;"><div class="n-title" style="font-size:22px;">AXI</div><div class="mono" style="font-size:13px;color:var(--axi);">TOON, 4 fields</div></div>
+          </div>
+        </div>
+        <p class="lead" style="text-align:center;margin:0 auto;">Same data, three front doors &mdash; all built ahead.
+          One task: <span class="accent mono">list the failing runs</span>. Watch the payload shrink.</p>
+        <p class="note" style="margin:0 auto;">Three commands and a token count. No debugging &mdash; if anything hiccups, I switch to a recording.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 10 — LIVE DEMO placeholder ============ -->
+    <section class="slide" data-slide="10" id="slide-10">
+      <div class="placeholder">
+        <div class="cue">&#127916;</div>
+        <div class="big">Live run &mdash; switch to terminal</div>
+        <div class="mono muted" style="font-size:18px;">CLI &rarr; MCP payload &rarr; AXI output &rarr; token diff</div>
+        <div class="mono" style="font-size:15px;color:var(--tax);">fallback: recording/demo-run.mp4</div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 11 — Signature: payload bar ============ -->
+    <section class="slide" data-slide="11" id="slide-11">
+      <h2 class="head" style="margin-bottom:20px;">The live token diff</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
+        <div class="payload">
+          <div class="pbar-row">
+            <div class="pbar-label">MCP<small>6 schemas + result</small></div>
+            <div class="pbar-track"><div class="pbar-fill tax" data-w="100"></div></div>
+            <div class="pbar-num tax-c" data-to="2655">0<small class="muted">baseline</small></div>
+          </div>
+          <div class="pbar-row">
+            <div class="pbar-label">CLI<small>verbose JSON</small></div>
+            <div class="pbar-track"><div class="pbar-fill tax-dim" data-w="51.15"></div></div>
+            <div class="pbar-num dim-c" data-to="1358">0<small class="muted">&minus;49% vs MCP</small></div>
+          </div>
+          <div class="pbar-row">
+            <div class="pbar-label accent">AXI<small>TOON · 4 fields · trunc</small></div>
+            <div class="pbar-track"><div class="pbar-fill win" data-w="8.89"></div></div>
+            <div class="pbar-num win-c" data-to="236">0<small style="color:var(--axi)">&minus;91% · &minus;83% vs CLI</small></div>
+          </div>
+        </div>
+        <div class="spacer-m"></div>
+        <p class="note">Per-call payload, measured live with an <b>approximate</b> tokenizer &mdash; read the <em>direction and magnitude</em>, not the third digit.
+          CLI is only ~half of MCP here because this server ships just <b>six</b> tools; the schema tax scales with tool count &mdash; thirty tools widen the gap, and AXI&rsquo;s &minus;91% barely moves.
+          But an agent never calls a tool once&hellip;</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 12 — Recorded real-agent run ============ -->
+    <section class="slide" data-slide="12" id="slide-12">
+      <h2 class="head" style="margin-bottom:16px;">Real agent, our app &mdash; the recorded run</h2>
+      <div class="fill two-col" style="align-items:start;">
+        <div>
+          <video class="videobox" controls preload="none" poster="">
+            <source src="recording/agent-run.mp4" type="video/mp4">
+            Your browser can&rsquo;t play this video.
+          </video>
+          <p class="mono muted" style="font-size:15px;margin-top:10px;">recording/agent-run.mp4 &mdash; drop the file here</p>
+          <p class="note" style="margin-top:10px;">A genuine agent (Claude) doing the real task via each interface. Recorded so the numbers are stable &mdash; deterministic, offline, no network on stage.</p>
+        </div>
+        <div>
+          <p class="col-title">Turns &middot; tokens &middot; cost per interface</p>
+          <table class="grid">
+            <thead><tr><th>Interface</th><th class="num">Turns</th><th class="num">Total tokens</th><th class="num">Cost (USD)</th></tr></thead>
+            <tbody>
+              <tr><td>CLI</td><td class="num q">TODO</td><td class="num q">TODO</td><td class="num q">TODO</td></tr>
+              <tr><td>MCP</td><td class="num q">TODO</td><td class="num q">TODO</td><td class="num q">TODO</td></tr>
+              <tr class="hot"><td>AXI</td><td class="num">TODO</td><td class="num">TODO</td><td class="num">TODO</td></tr>
+            </tbody>
+          </table>
+          <div class="spacer-s"></div>
+          <p class="note win">Slide 11 was one payload. Here it <b>compounds</b> &mdash; tokens are charged per turn, so the per-call gap multiplies across the whole task.
+            <span class="muted">Fill via</span> <span class="mono">node scripts/agent-run.mjs</span>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 13 — Published benchmarks ============ -->
+    <section class="slide" data-slide="13" id="slide-13">
+      <h2 class="head">And it holds at scale</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
+        <p class="mono muted" style="font-size:15px;margin:0 0 12px;">GitHub benchmark &middot; 85 runs/condition &middot; Claude Sonnet &middot; openclaw/openclaw</p>
+        <table class="grid" style="font-size:19px;">
+          <thead><tr><th>Condition</th><th class="num">Success</th><th class="num">Cost/task</th><th class="num">Duration</th><th class="num">Turns</th><th class="num">Avg input tok.</th></tr></thead>
+          <tbody>
+            <tr class="hot"><td>AXI</td><td class="num">100%</td><td class="num">$0.050</td><td class="num">15.7s</td><td class="num">3</td><td class="num">46K</td></tr>
+            <tr><td>CLI</td><td class="num">86%</td><td class="num">$0.054</td><td class="num">17.4s</td><td class="num">3</td><td class="num">47K</td></tr>
+            <tr><td>MCP (eager)</td><td class="num">87%</td><td class="num amber">$0.148</td><td class="num">34.2s</td><td class="num">6</td><td class="num amber">175K</td></tr>
+            <tr><td>MCP (ToolSearch)</td><td class="num">82%</td><td class="num amber">$0.147</td><td class="num">41.1s</td><td class="num">8</td><td class="num amber">153K</td></tr>
+            <tr><td>Code-mode</td><td class="num">84%</td><td class="num">$0.101</td><td class="num">43.4s</td><td class="num">7</td><td class="num">&mdash;</td></tr>
+          </tbody>
+        </table>
+        <div class="spacer-m"></div>
+        <p class="note">One payload &rarr; one real-agent task &rarr; hundreds of runs across 17 tasks. Author-published &mdash; but you just watched the <b>mechanism</b> live and saw it compound, which is the reason to trust the direction.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 14 — Decision guide ============ -->
+    <section class="slide" data-slide="14" id="slide-14">
+      <h2 class="head">So &mdash; when do you use what?</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
+        <div class="decide">
+          <div class="drow">
+            <div class="dwho cli-c">CLI</div>
+            <div class="dwhen">when the tool already exists, usage is occasional, or you&rsquo;re composing shell pipelines &mdash; and token cost isn&rsquo;t your bottleneck.</div>
+          </div>
+          <div class="drow">
+            <div class="dwho mcp-c">MCP</div>
+            <div class="dwhen">when you need a small, stable set of typed tools inside a framework that speaks MCP natively; tool count is low; discoverability beats token budget.</div>
+          </div>
+          <div class="drow">
+            <div class="dwho axi-c">AXI</div>
+            <div class="dwhen">when an agent hits the tool <b>frequently</b>, the surface is broad, or token/cost/latency is a real constraint &mdash; and you control the tool enough to shape its output.</div>
+          </div>
+        </div>
+        <div class="spacer-m"></div>
+        <p class="note win">AXI isn&rsquo;t &ldquo;the winner&rdquo; &mdash; it&rsquo;s a set of habits. TOON output, minimal schemas, and aggregates are retrofittable to <b>any</b> CLI or MCP server. Most of them make your MCP server better too.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 15 — Takeaways ============ -->
+    <section class="slide" data-slide="15" id="slide-15">
+      <h2 class="head">Takeaways</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
+        <ul class="clean" style="font-size:24px;">
+          <li class="good"><b>One</b> &mdash; the <span class="accent">interface, not the model</span>, often dominates agent cost. Treat token budget as a design constraint.</li>
+          <li class="good"><b>Two</b> &mdash; structure and thrift aren&rsquo;t opposites. You can be both &mdash; that&rsquo;s AXI&rsquo;s whole claim.</li>
+          <li class="good"><b>Three</b> &mdash; you can start Monday: trim one tool&rsquo;s output to the fields agents actually use, and watch turns drop.</li>
+        </ul>
+        <div class="spacer-m"></div>
+        <p class="col-title">Resources</p>
+        <div class="res">
+          <span class="pill"><b>axi.md</b></span>
+          <span class="pill"><b>github.com/kunchenguid/axi</b></span>
+          <span class="pill"><b>TOON</b> &mdash; toon-format</span>
+          <span class="pill">this repo &middot; <b>discovery_notes.md</b></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 16 — Q&A / thanks ============ -->
+    <section class="slide" data-slide="16" id="slide-16">
+      <p class="kicker">Thanks <span class="dot">·</span> Q &amp; A</p>
+      <h1 class="title" style="font-size:64px;">Questions?</h1>
+      <div class="spacer-m"></div>
+      <div class="fill">
+        <dl class="qa">
+          <dt>Aren&rsquo;t the benchmarks self-published?</dt>
+          <dd>Yes &mdash; that&rsquo;s why we verified the mechanism live. Direction is robust; treat exact figures as indicative.</dd>
+          <dt>Does TOON hurt readability for humans?</dt>
+          <dd>It&rsquo;s for the agent &mdash; keep a <span class="mono">--full</span> / <span class="mono">--json</span> escape hatch for humans and tooling.</dd>
+          <dt>Can I get AXI&rsquo;s benefits without leaving MCP?</dt>
+          <dd>Mostly yes &mdash; minimal schemas, aggregates, and truncation all apply to MCP tool results.</dd>
+          <dt>What&rsquo;s the catch?</dt>
+          <dd>You have to own and shape the tool. You can&rsquo;t AXI-ify a third-party API you don&rsquo;t control.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <!-- ============ footer (shared) ============ -->
+    <footer class="deck-footer">
+      <div class="foot-title">Apps Agents Love &middot; CLI vs MCP vs AXI</div>
+      <div class="foot-echo" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="foot-num"><b id="slideNum">1</b> / 17</div>
+    </footer>
+  </div>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+    var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+    var stage = document.getElementById("stage");
+    var progressFill = document.getElementById("progressFill");
+    var slideNum = document.getElementById("slideNum");
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var idx = 0;
+
+    function indexFromHash() {
+      var m = (location.hash || "").match(/^#slide-(.+)$/);
+      if (!m) return 0;
+      for (var i = 0; i < slides.length; i++) {
+        if (slides[i].getAttribute("data-slide") === m[1]) return i;
+      }
+      return 0;
+    }
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function animatePayload() {
+      var root = document.getElementById("slide-11");
+      if (!root) return;
+      var fills = root.querySelectorAll(".pbar-fill");
+      var nums = root.querySelectorAll(".pbar-num");
+      var i;
+      for (i = 0; i < fills.length; i++) {
+        (function (f) {
+          if (reduce) { f.style.width = f.getAttribute("data-w") + "%"; return; }
+          f.style.width = "0%";
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { f.style.width = f.getAttribute("data-w") + "%"; });
+          });
+        })(fills[i]);
+      }
+      for (i = 0; i < nums.length; i++) {
+        (function (n) {
+          var to = parseInt(n.getAttribute("data-to"), 10);
+          // keep the <small> caption; only rewrite the leading number text node
+          var small = n.querySelector("small");
+          function setVal(v) {
+            n.firstChild.nodeValue = v.toLocaleString("en-US");
+          }
+          if (reduce) { setVal(to); return; }
+          var dur = 950, t0 = null;
+          function step(ts) {
+            if (t0 === null) t0 = ts;
+            var k = Math.min(1, (ts - t0) / dur);
+            setVal(Math.round(to * easeOut(k)));
+            if (k < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        })(nums[i]);
+      }
+    }
+
+    function show(i, updateHash) {
+      idx = Math.max(0, Math.min(slides.length - 1, i));
+      for (var k = 0; k < slides.length; k++) {
+        slides[k].classList.toggle("active", k === idx);
+      }
+      progressFill.style.width = ((idx + 1) / slides.length * 100) + "%";
+      slideNum.textContent = String(idx + 1);
+      if (updateHash !== false) {
+        history.replaceState(null, "", "#slide-" + slides[idx].getAttribute("data-slide"));
+      }
+      if (slides[idx].id === "slide-11") animatePayload();
+    }
+
+    function next() { show(idx + 1); }
+    function prev() { show(idx - 1); }
+
+    function resize() {
+      var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+      stage.style.transform = "scale(" + s + ")";
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        (document.documentElement.requestFullscreen || function () {}).call(document.documentElement);
+      } else {
+        (document.exitFullscreen || function () {}).call(document);
+      }
+    }
+
+    document.addEventListener("keydown", function (e) {
+      switch (e.key) {
+        case "ArrowRight": case " ": case "PageDown": next(); e.preventDefault(); break;
+        case "ArrowLeft": case "PageUp": prev(); e.preventDefault(); break;
+        case "Home": show(0); e.preventDefault(); break;
+        case "End": show(slides.length - 1); e.preventDefault(); break;
+        case "f": case "F": toggleFullscreen(); e.preventDefault(); break;
+      }
+    });
+
+    // click left/right half to navigate; ignore clicks on interactive elements
+    document.getElementById("viewport").addEventListener("click", function (e) {
+      var t = e.target;
+      while (t && t !== document.body) {
+        var tag = t.tagName;
+        if (tag === "VIDEO" || tag === "A" || tag === "BUTTON" || tag === "SOURCE") return;
+        t = t.parentNode;
+      }
+      if (e.clientX < window.innerWidth / 2) prev(); else next();
+    });
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("hashchange", function () { show(indexFromHash(), false); });
+
+    resize();
+    show(indexFromHash());
+  })();
+</script>

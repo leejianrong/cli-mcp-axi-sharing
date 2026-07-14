@@ -15,7 +15,7 @@ _Captured 2026-07-14. Source of truth for the two deliverables (`presentation_ou
 
 ## The live demo
 
-**Arc:** one lightweight, offline app → exposed three ways (CLI, MCP, AXI) → the AXI layer is built **live on stage** → prove the win with a live tokenizer diff.
+**Arc:** one lightweight, offline app → exposed three ways (CLI, MCP, AXI) → all three prebuilt; on stage you **run** them on the same task (no live coding) → prove the win with a live tokenizer diff. _(The four AXI principles are shown as before/after code snippets on slide 8b, not typed live — see the revised decision below.)_
 
 | Element | Decision |
 |---|---|

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { filterByStatus, loadRuns, summarize, truncate } from "./core.js";
+import {
+  classifyFailure,
+  failingJobs,
+  filterByStatus,
+  loadRuns,
+  runSummary,
+  summarize,
+  truncate,
+} from "./core.js";
 
 describe("core", () => {
   it("loads the 8 seeded runs offline", () => {
@@ -24,5 +32,33 @@ describe("core", () => {
     const long = "x".repeat(1500);
     expect(truncate(long, 120)).toBe(`${"x".repeat(120)}…(1500 chars, use --full)`);
     expect(truncate("short", 120)).toBe("short");
+  });
+
+  it("projects a run down to a summary without logs or full jobs", () => {
+    const run = loadRuns()[0];
+    const s = runSummary(run);
+    expect(s).not.toHaveProperty("logs");
+    expect(typeof s.jobs).toBe("string"); // a rollup string, not the jobs[] array
+    expect(s.jobs).toContain("failed");
+    expect(s.id).toBe(run.id);
+  });
+
+  it("names the failing jobs of a run", () => {
+    const byId = (id: string) => loadRuns().find((r) => r.id === id)!;
+    expect(failingJobs(byId("run_8f2a"))).toEqual(["e2e"]);
+    expect(failingJobs(byId("run_3d71"))).toEqual(["unit"]);
+    expect(failingJobs(byId("run_b90c"))).toEqual(["lint"]);
+  });
+
+  it("classifies failures as flaky/infra vs regression from the logs", () => {
+    const byId = (id: string) => loadRuns().find((r) => r.id === id)!;
+    // run_8f2a: e2e timeout + 502 sandbox → flaky/infra
+    expect(classifyFailure(byId("run_8f2a")).classification).toBe("flaky/infra");
+    // run_3d71: unit AssertionErrors → regression
+    expect(classifyFailure(byId("run_3d71")).classification).toBe("regression");
+    // run_b90c: eslint errors → regression
+    expect(classifyFailure(byId("run_b90c")).classification).toBe("regression");
+    // a passing run is not classified
+    expect(classifyFailure(byId("run_2f88")).classification).toBe("unknown");
   });
 });

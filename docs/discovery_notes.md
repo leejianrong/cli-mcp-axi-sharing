@@ -20,12 +20,13 @@ _Captured 2026-07-14. Source of truth for the two deliverables (`presentation_ou
 | Element | Decision |
 |---|---|
 | **App domain** | **CI/CD pipeline runs** (`ci` tool). Verbose JSON, obvious aggregates (pass/fail counts), long logs to truncate, and something agents genuinely query. |
-| **Prepped beforehand** | **All three interfaces** — the app + **CLI** + **MCP server** (~6 tools so schema bloat is visible) + the finished **AXI** layer. Nothing is built on stage. |
+| **Prepped beforehand** | **All three interfaces** — the app + **CLI** + **MCP server** (~21 realistic CI tools so the schema tax is visible; `list_runs` returns summaries so drilling in costs extra turns) + the finished **AXI** layer (`ci list` + a one-call `ci failures` affordance). Nothing is built on stage. |
 | **~~Built live~~ → No live coding** | _Decision revised: no live coding._ The **4 marquee principles** — (1) token-efficient TOON output, (2) minimal default schema, (4) pre-computed aggregates, (3) content truncation — are now shown as **before/after code snippets on the slides**, and their effect is visible when the finished AXI command runs. |
 | **Live demo = a scripted RUN** | On stage you *run* the three prepped interfaces on the same task and show the output shrink, then run the tokenizer diff. Try it live; **a pre-recorded screen capture of the full run is an acceptable fallback.** |
 | **Fallback** | Primary: run live. Backup: play the pre-recorded run (asciinema/screen capture) + saved `token-diff` output. Never debug on stage. |
 | **Proving the win — two layers** | (a) **Pre-recorded real-agent run** — one genuine agent (Claude) doing the task through each interface, with **turns + tokens + cost** visible. Always played from the recording (deterministic, no live-agent risk). Then (b) **live tokenizer diff** of the three payloads for the deterministic on-stage "wow." Honest framing (see below); the published benchmark shows it holds at scale. |
-| **Measured task** | "List the pipeline runs that are failing." Hits verbose output + aggregates + truncation at once. |
+| **Measured task** | Two levels: the **live tokenizer diff** uses the single call "list the failing runs" (per-call payload). The **recorded agent run** uses a **multi-step** task — "for each failing run, which job failed and is it flaky/infra or a real regression?" — which forces MCP to drill in over several turns (schema tax compounds) while AXI answers in one `ci failures` call. |
+| **Fair harness** | `scripts/agent-run.mjs` calls the Messages API directly (raw `fetch`, no dep) with a minimal shared system prompt, each interface's own tools only, and **no prompt caching** — so tokens are attributable to the interface and cost is run-order-independent. Reports token buckets; `--repeats` averages. Needs `ANTHROPIC_API_KEY`. _(This replaced an earlier Claude-Code-CLI harness whose per-condition system-prompt overhead confounded the result.)_ |
 
 ## Locked defaults
 

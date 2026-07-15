@@ -105,18 +105,18 @@
 
   | Interface | Payload tokens | vs MCP |
   |---|---|---|
-  | MCP (6 schemas + result) | **2,655** | baseline |
-  | CLI (verbose JSON) | **1,358** | −49% |
-  | AXI (TOON, 4 fields, truncated) | **236** | **−91%** (−83% vs CLI) |
+  | MCP (21 tool schemas + result) | **3,897** | baseline |
+  | CLI (verbose JSON) | **1,358** | −65% |
+  | AXI (TOON, 4 fields, truncated) | **236** | **−94%** (−83% vs CLI) |
 
 - **Talking points:**
-  - Read the numbers: the MCP payload is heaviest (six schemas plus a verbose result), AXI is the lightest by a wide margin, CLI sits in between.
+  - Read the numbers: the MCP payload is heaviest (a realistic ~21-tool catalog plus a result), AXI is the lightest by a wide margin, CLI sits in between.
   - **Say the honest framing:** "This is the *per-call payload* difference, measured live with an approximate tokenizer — read the *direction and magnitude*, not the third digit. But an agent doesn't call a tool once…"
-  - One honest aside worth making: here the CLI is only about half of MCP, not the tiny fraction you might expect. That's because our server ships *six* tools. The schema tax scales with tool count — a real server with thirty tools pushes MCP far higher and widens that gap. AXI's −91% barely moves.
+  - One honest aside worth making: the MCP payload is nearly 3× the CLI's verbose dump — because a realistic CI server exposes ~21 tools (runs, jobs, logs, artifacts, workflows, deployments, …), and every schema rides in context on *every* turn. A bigger server widens the gap further; a lean 3-tool server would narrow it. AXI's −94% barely moves either way.
 - **Transition:** "…so what happens across a whole task? Let me show you a real agent doing exactly this."
 
 ## Slide 12 — Real agent, our app: the recorded run (2:30)
-- **Layout:** Embedded **pre-recorded video** (or GIF) of a genuine agent (Claude) completing "list the failing runs" through each interface, side by side or in sequence. Overlay/caption the live counters: **turns · total tokens · cost**. Below the video, the summary table of the three runs:
+- **Layout:** Embedded **pre-recorded video** (or GIF) of a genuine agent (Claude) completing a **multi-step task** — _"for each failing run, which job failed, and is it a flaky/infra issue or a real regression?"_ — through each interface. Overlay/caption the live counters: **turns · total tokens · cost**. Below the video, the summary table of the three runs:
 
   | Interface | Turns | Total tokens | Cost (USD) |
   |---|---|---|---|
@@ -124,10 +124,11 @@
   | MCP | _TODO_ | _TODO_ | _TODO_ |
   | AXI | _TODO_ | _TODO_ | _TODO_ |
 
-  > **Fill these in** by running `node scripts/agent-run.mjs` (from `ci-demo/`, with API credentials) before the talk — it prints exactly this table. It's the one non-offline step; run it once, capture the numbers and the screen recording, then it never touches the network again. Expect the same shape as slide 13's published benchmark: MCP heaviest on turns *and* tokens, AXI lowest on both.
+  > **Fill these in** by running `node scripts/agent-run.mjs` (from `ci-demo/`, with `ANTHROPIC_API_KEY` set) before the talk — it prints exactly this table (plus input/output token buckets). It's the one non-offline step; run it once (optionally `--repeats 3` to average), capture the numbers and the screen recording, then it never touches the network again. Expect the same shape as slide 13's published benchmark: MCP heaviest on turns *and* tokens, AXI lowest on both.
+- **Why this task (say it if asked):** it's deliberately multi-step, because that's where the per-turn tax compounds. MCP's `list_runs` returns lightweight summaries (as real list endpoints do), so the agent must drill in per failing run (`get_logs`/`search_logs`) — several turns, re-reading all 21 schemas each time. AXI answers the whole thing in one compact `ci failures` call. CLI dumps everything at once — one big turn.
 - **Talking points:**
-  - "This is not a live agent — it's a recording, so the numbers are stable — but it *is* a real agent doing the real task on the app we just ran."
-  - Walk the counters: MCP burns the most tokens *and* the most turns (schema tax charged every round-trip); AXI finishes in fewer turns with far fewer tokens; CLI cheap but wobblier.
+  - "This is not a live agent — it's a recording, so the numbers are stable — but it *is* a real agent doing the real task on the app we just ran. The harness is fair: same minimal system prompt, each interface gets only its own tools, no prompt caching — so the tokens are the interface's, not a harness artifact."
+  - Walk the counters: MCP burns the most tokens *and* the most turns (21 schemas charged every round-trip, plus per-run drill-down); AXI finishes in the fewest turns with far fewer tokens; CLI cheap-ish but wobblier.
   - **The key insight, made concrete:** "Slide 11 was one payload. Here you see it *compound* — tokens are charged per turn, so the per-call gap multiplies across the task."
 - **Why pre-recorded (say it):** deterministic, offline, no API/network risk on stage — same reason we recorded it as the demo fallback.
 - **Fallback:** if video won't play, show the summary table (static) and narrate.

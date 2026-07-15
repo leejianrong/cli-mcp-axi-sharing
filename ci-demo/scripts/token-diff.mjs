@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 
 import { encode } from "gpt-tokenizer";
 
+import { TOOLS } from "../dist/mcp-server.js";
 import { captureCli, captureMcp, captureAxi } from "./capture.mjs";
 
 const OUT_DIR = fileURLToPath(new URL("../out/", import.meta.url));
@@ -61,7 +62,7 @@ const LABEL_WIDTH = 26;
 
 console.log('Payload tokens for "list failing runs" (gpt-tokenizer, approx):');
 console.log(
-  `  ${leader("MCP  (6 schemas + result)", LABEL_WIDTH)} ${fmt(mcp)}   (baseline)`,
+  `  ${leader(`MCP  (${TOOLS.length} tool schemas + result)`, LABEL_WIDTH)} ${fmt(mcp)}   (baseline)`,
 );
 console.log(
   `  ${leader("CLI  (verbose JSON)", LABEL_WIDTH)} ${fmt(cli)}   ${pct(cli, mcp)} vs MCP`,

@@ -17,7 +17,7 @@ ci-demo/
   data/runs.json            # ~8 seeded pipeline runs (verbose: jobs[], long log tail)
   src/core.ts               # loadRuns(), filterByStatus(), summarize()  — shared by all 3
   src/cli.ts                # `ci-cli`  → dumps verbose JSON (the "human" CLI)
-  src/mcp-server.ts         # `ci-mcp`  → MCP server exposing ~6 tools with full schemas
+  src/mcp-server.ts         # `ci-mcp`  → MCP server exposing ~21 tools with full schemas
   src/axi.ts                # `ci`      → the FINISHED AXI command (built ahead of time)
   scripts/token-diff.mjs    # tokenizer diff across the 3 payloads (gpt-tokenizer)
   scripts/capture.mjs       # writes cli-output.json, mcp-payload.json to /out for the diff
@@ -51,8 +51,8 @@ Seed ~8 runs: mix of `failed` (3), `running` (2), `success` (3). This makes the 
 
 ### The three interfaces (prepped)
 - **CLI (`src/cli.ts`)** — `ci-cli list --status failed` prints `JSON.stringify(runs, null, 2)` of the full objects. Deliberately verbose. Action/observation split: no summary, no next-step hint.
-- **MCP (`src/mcp-server.ts`)** — exposes ~6 tools so the schema tax is visible: `list_runs`, `get_run`, `list_jobs`, `get_logs`, `retry_run`, `cancel_run`. Each with a full JSON-schema `inputSchema` + descriptions. For the demo you don't need a live agent — you need the **payload the model would read**: the concatenated tool schemas + one tool result. `scripts/capture.mjs` serializes that to `out/mcp-payload.json`.
-- **AXI (`src/axi.ts`)** — the **finished** command, built ahead of time. You only *run* it on stage. The four transformations that produced it are shown as code snippets on **slide 8b** (before/after), so the audience sees the "how" without you typing.
+- **MCP (`src/mcp-server.ts`)** — exposes a realistic **~21-tool** CI surface so the schema tax is visible: `list_runs`, `get_run`, `list_jobs`, `get_logs`, `search_logs`, `get_job_logs`, `get_run_annotations`, `list_artifacts`, `list_workflows`, `trigger_workflow`, `list_branches`, `get_pipeline_metrics`, `list_deployments`, … Each with a full JSON-schema `inputSchema` + descriptions. Crucially, `list_runs` returns lightweight **summaries** (no logs) — as real list endpoints do — so answering "why did it fail" requires drilling in per run. For the tokenizer diff you don't need a live agent — you need the **payload the model would read**: the concatenated tool schemas + one tool result. `scripts/capture.mjs` serializes that to `out/mcp-payload.json`.
+- **AXI (`src/axi.ts`)** — the **finished** command, built ahead of time. You only *run* it on stage. Two subcommands: `ci list [--status]` (the compact list) and `ci failures` (the multi-step task — each failing run's failing job + a flaky-vs-regression verdict — answered in ONE compact call). The four transformations that produced the list output are shown as code snippets on **slide 8b** (before/after), so the audience sees the "how" without you typing.
 
 ### `src/axi.ts` — the finished command (built ahead; shown as snippets on slide 8b)
 This is what ships and what you run on stage. The commented principle labels map 1:1 to the slide-8b snippets:
@@ -86,10 +86,16 @@ console.log(renderOutput(output));                  // Principle 1: TOON, ~40% s
 
 ### The real-agent recording (`recording/agent-run.mp4`) — produce ahead, play on slide 12
 This is the "genuine agent on screen" moment. Produce it once, offline of the talk, and play it from the deck.
-- **What it shows:** a real agent (Claude — e.g. via the Agent SDK or Claude Code) completing _"list the failing runs"_ **three times**, once per interface (CLI, MCP, AXI), with **turns · total tokens · cost** captured for each. `scripts/agent-run.mjs` runs the three and prints/records the metrics; screen-capture it (or capture the terminal + overlay the numbers in post).
+- **What it shows:** a real Claude agent completing the **multi-step task** — _"for each failing run, which job failed, and is it flaky/infra or a real regression?"_ — **three times**, once per interface (CLI, MCP, AXI), with **turns · token buckets · cost** captured for each. `scripts/agent-run.mjs` runs the three and prints the table; screen-capture it (or capture the terminal + overlay the numbers in post).
+- **How it runs (the fair harness):** the script uses a **minimal shared system prompt** and gives each condition **only its own tools** (one thin run-command tool for CLI/AXI; the full 21-tool catalog for MCP) — so the tokens measured belong to the interface, not to a harness baseline. It's **multi-provider** (`--provider`, else auto-detected):
+  - `anthropic-cli` — uses your **Claude Code subscription, no API key** (`claude` CLI with a minimal `--system-prompt` + `--exclude-dynamic-system-prompt-sections` so it's fair). Best for the recording; cost is the CLI's estimate. **This is the default when no API key is set.**
+  - `openai` — raw `fetch` to Chat Completions; needs `OPENAI_API_KEY`; default `gpt-4o-mini`. Cheap dev testing (and the tokenizer diff is exact for it).
+  - `anthropic-api` — raw `fetch` to the Messages API; needs `ANTHROPIC_API_KEY` (pay-as-you-go); exact, order-independent cost, no prompt caching.
+
+  Run `pnpm build && node scripts/agent-run.mjs` (add `--provider …` and/or `--repeats 3`). No credentials → prints a TODO table and exits, spending nothing. _(A normal app would use each provider's official SDK; this repo stays dependency-free/offline, so the API providers use `fetch`.)_
 - **Same task, same model, same app** — only the interface changes. That's the whole point: the interface is the independent variable.
 - **Why recorded, not live:** deterministic numbers, fully offline on stage, no API/network/latency risk. State this out loud on slide 12 so it's not mistaken for sleight of hand.
-- **Capture the three numbers** into slide 12's summary table (turns / tokens / cost per interface) so the point survives even if the video won't play.
+- **Capture the numbers** into slide 12's summary table (turns / tokens / cost per interface) so the point survives even if the video won't play.
 
 ---
 
@@ -101,7 +107,7 @@ This is the "genuine agent on screen" moment. Produce it once, offline of the ta
 - [ ] All three interfaces run clean: `ci-cli list --status failed`, `ci-mcp` capture, and `ci list --status failed`.
 - [ ] `scripts/capture.mjs` and `scripts/token-diff.mjs` run clean and produce numbers.
 - [ ] **Recording of the full run captured** (`recording/demo-run.mp4` or asciinema) and it plays without network — this is your fallback.
-- [ ] **Real-agent run recorded** (`recording/agent-run.mp4`): a genuine agent (Claude) completing the task via CLI, MCP, and AXI, with **turns · tokens · cost** visible on screen. This plays on **slide 12** and is always from the recording (no live agent on stage).
+- [ ] **Real-agent run recorded** (`recording/agent-run.mp4`): `node scripts/agent-run.mjs` — a genuine agent completes the multi-step task via CLI, MCP, and AXI, with **turns · tokens · cost** visible. Defaults to your **Claude Code subscription** (no key); or `--provider openai` / `anthropic-api` with the matching key. Plays on **slide 12**, always from the recording (no live agent on stage).
 - [ ] Slide 12 summary table filled with the agent-run numbers; slide 8b code snippets match the shipped `src/axi.ts` (same lines).
 - [ ] Terminal prepped per the **UI/terminal optimizations** section below (no editor needed).
 - [ ] Dry-run done end to end; slide 11 numbers filled in from the real `token-diff` output.
@@ -130,7 +136,7 @@ node scripts/capture.mjs cli     # writes out/cli-output.json
 node scripts/capture.mjs mcp     # writes out/mcp-payload.json (6 tool schemas + one result)
 cat out/mcp-payload.json | head -40
 ```
-**Audience sees:** the tool definitions — six tools, each with a JSON schema, descriptions, parameter types — followed by the result.
+**Audience sees:** the tool definitions — the full ~21-tool catalog, each with a JSON schema, descriptions, parameter types — followed by the result.
 
 **Say:** "MCP gives the agent structure and discoverability, which is genuinely useful. But *this whole menu* gets loaded into context — and it's charged every turn. Six tools here; real servers ship thirty. This is the schema tax."
 
@@ -161,18 +167,18 @@ node scripts/token-diff.mjs
 **Audience sees** (the real numbers from the dry run, on the seeded data):
 ```
 Payload tokens for "list failing runs" (gpt-tokenizer, approx):
-  MCP  (6 schemas + result) .  2,655   (baseline)
-  CLI  (verbose JSON) .......  1,358   -49% vs MCP
-  AXI  (TOON, 4 fields, trunc) .    236   -91% vs MCP,  -83% vs CLI
+  MCP  (21 tool schemas + result)  3,897   (baseline)
+  CLI  (verbose JSON) ...........  1,358   -65% vs MCP
+  AXI  (TOON, 4 fields, trunc) ..    236   -94% vs MCP,  -83% vs CLI
 ```
 **Say the honest line:** "This is the *per-call payload* difference, measured live with an approximate tokenizer — so read the *direction and magnitude*, not the third digit. But an agent never calls a tool just once…" → advance to slide 12.
 
-> Note the CLI lands at roughly half of MCP, not a tiny fraction — because this server only ships six tools. The schema tax scales with tool count; a real thirty-tool server pushes MCP much higher. AXI's −91% barely moves either way. Say that out loud if a lead asks why CLI isn't further behind.
+> Note the MCP payload is nearly 3× the CLI's verbose dump — that's the 21 tool schemas riding in context. A realistic CI surface, not padding; a bigger server pushes MCP higher, a leaner one narrows it. AXI's −94% barely moves either way. Say that out loud if a lead asks about the spread.
 
 ### Step 5 — Play the recorded real-agent run (~2.5 min) [slide 12, from video]
 Leave the terminal; this beat is **played from the deck**, not run live.
-**Do:** play `recording/agent-run.mp4`. It shows a real agent completing the task via CLI, MCP, then AXI, with **turns · tokens · cost** on screen.
-**Say:** "Same model, same task, same app — only the interface changes. This is recorded so the numbers are stable, but it's a genuine agent. Watch what compounds: MCP re-reads that big schema *every turn* and takes more turns; AXI finishes in fewer turns with a fraction of the tokens. The one-payload gap from a second ago multiplies across the whole task."
+**Do:** play `recording/agent-run.mp4`. It shows a real agent completing the **multi-step task** (classify each failing run) via CLI, MCP, then AXI, with **turns · tokens · cost** on screen.
+**Say:** "Same model, same task, same app — only the interface changes, and the harness is fair (shared minimal prompt, each interface's own tools, no caching). This is recorded so the numbers are stable, but it's a genuine agent. Watch what compounds: MCP's list returns summaries, so the agent drills in per run — and every one of those turns re-reads all 21 schemas. AXI answers in one compact `ci failures` call. The one-payload gap from a second ago multiplies across the whole task."
 **Then:** advance to slide 13 (published benchmark) — "and here's that same pattern across hundreds of runs."
 **Fallback:** if the video won't play, show slide 12's static summary table (turns/tokens/cost per interface) and narrate it. Never troubleshoot playback live.
 

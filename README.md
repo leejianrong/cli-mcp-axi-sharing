@@ -17,13 +17,14 @@ gaps, not the exact digits:
 
 | Interface | Payload tokens | vs MCP |
 |---|---|---|
-| MCP (6 tool schemas + one result) | 2,655 | baseline |
-| CLI (verbose JSON) | 1,358 | −49% |
-| **AXI** (TOON, 4 fields, truncated) | **236** | **−91%** (−83% vs CLI) |
+| MCP (21 tool schemas + one result) | 3,897 | baseline |
+| CLI (verbose JSON) | 1,358 | −65% |
+| **AXI** (TOON, 4 fields, truncated) | **236** | **−94%** (−83% vs CLI) |
 
-The CLI sits at about half of MCP here only because this server ships six tools; the
-schema tax scales with tool count, so a thirty-tool server pushes MCP much higher
-while AXI barely moves.
+The MCP payload is nearly 3× the CLI's verbose dump because this server exposes a
+realistic ~21-tool CI surface (runs, jobs, logs, artifacts, workflows, deployments,
+…), and every schema rides in context on _every_ turn. That gap widens with a bigger
+server and narrows with a leaner one; AXI barely moves either way.
 
 ## Quick start
 
@@ -41,6 +42,7 @@ pnpm test           # fast, no infra
 node dist/cli.js list --status failed      # verbose JSON (the human baseline)
 node dist/axi.js list --status failed      # compact TOON (the AXI command)
 node dist/axi.js list --status failed --full   # the escape hatch
+node dist/axi.js failures                  # multi-step task, answered in one call
 
 node scripts/token-diff.mjs                # the payload token comparison
 ```
@@ -55,26 +57,48 @@ runbook and fallback plan are in [`docs/live_demo_script.md`](docs/live_demo_scr
 
 ## The one online step
 
-`scripts/agent-run.mjs` drives a genuine Claude agent through the task once per
-interface, capturing turns, tokens, and cost for the slide-12 recording. It's the
-only part that touches the network, and it runs **before** the talk, never on stage.
-With no credentials it prints a TODO table instead of failing.
+`scripts/agent-run.mjs` drives a genuine agent through a **multi-step** task —
+_"for each failing run, which job failed, and is it flaky/infra or a real
+regression?"_ — once per interface, capturing turns, tokens, and cost for the
+slide-12 recording. It's the only part that touches the network, runs **before** the
+talk (never on stage), and prints a TODO table if it finds no credentials.
+
+The comparison is fair: a minimal shared system prompt, each interface gets only its
+own tools (one run-command tool for CLI/AXI; the full 21-tool catalog for MCP), and —
+for the API providers — no prompt caching, so tokens are attributable to the
+interface. It's **multi-provider** (`--provider`, else auto-detected):
 
 ```bash
-node scripts/agent-run.mjs        # needs `claude` logged in or ANTHROPIC_API_KEY
+pnpm agent-run                                   # default: your Claude Code
+                                                 # subscription (no key), auto-loads .env
+pnpm agent-run -- --provider openai --repeats 3  # gpt-4o-mini (cheap dev testing)
+pnpm agent-run -- --provider anthropic-api       # pay-as-you-go Messages API
 ```
+
+| `--provider` | Auth | Default model |
+|---|---|---|
+| `anthropic-cli` _(default)_ | your Claude Code subscription — no key | `claude-sonnet-5` |
+| `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| `anthropic-api` | `ANTHROPIC_API_KEY` | `claude-sonnet-5` |
+
+For a key-based provider, copy [`ci-demo/.env.example`](ci-demo/.env.example) to
+`ci-demo/.env` (gitignored) and fill in the key — `pnpm agent-run` loads it
+automatically. For the slide-12 recording, prefer `anthropic-cli` (Claude) so the
+numbers match the talk's benchmark; `gpt-4o-mini` is for cheap iteration.
 
 ## Layout
 
 ```
 ci-demo/
   data/runs.json        8 seeded pipeline runs (3 failed / 2 running / 3 success)
-  src/core.ts           shared loadRuns · filterByStatus · summarize · truncate
+  src/core.ts           shared helpers: loadRuns · filterByStatus · summarize ·
+                        truncate · runSummary · failingJobs · classifyFailure
   src/cli.ts            ci-cli  — verbose JSON
-  src/mcp-server.ts     ci-mcp  — 6 fully-schema'd tools
-  src/axi.ts            ci      — the finished AXI command (P1–P4)
-  scripts/              capture · token-diff · agent-run
+  src/mcp-server.ts     ci-mcp  — ~21 fully-schema'd tools (list_runs → summaries)
+  src/axi.ts            ci      — the AXI command: `list` (P1–P4) + `failures`
+  scripts/              capture · token-diff · agent-run (multi-provider)
   demo.sh, aliases.sh   the on-stage driver
+  .env.example          keys for agent-run's key-based providers (copy to .env)
   vendor/axi-sdk-js/    committed build of the real SDK (see its README)
 slides/                 the deck (index.html served by Pages)
 docs/                   the plan, outline, runbook, and script

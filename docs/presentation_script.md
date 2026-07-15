@@ -14,73 +14,80 @@
 
 [Title slide up. Keep it clean, don't rush the open.]
 
-Every team in this room is wiring AI agents into real systems right now: into your CI, your ticket tracker, your browser, your internal APIs. And most of the attention goes to the model you pick and the prompt you write. Today I want to talk about the thing in the middle that quietly decides your token bill: the interface between the agent and your system.
+Every team in this room is wiring AI agents into real systems right now: into your CI, your ticket tracker, and your browser. Most of the attention goes to the model you pick and the prompt you write. Today I want to talk about the thing in the middle that quietly decides your token bill: the interface between the agent and your system.
 
-By the end you'll have a feel for when to reach for a plain command-line tool, when for MCP, and what this newer idea called AXI actually changes. And we'll run all three side by side on the same little app, so you can watch the difference rather than take my word for it.
+By the end of this presentation, you'll have a feel for when to reach for a plain CLI, when for MCP, and what this newer idea called AXI actually changes. I've also prepared a demo where we run all three side by side on the same little app, so you can watch the difference rather than take my word for it.
 
 ## Slide 2 — Hook: an agent is only as good as the tools you hand it (1:30)
 
 [Advance. The three-box diagram: Agent → [ interface ] → Your system. Middle box highlighted.]
 
-Let me define the players in plain terms, because this is a mixed room and I don't want to assume. An **agent** is just a language model running in a loop that's allowed to call tools. It reads some context, decides to do something, does it, reads the result, and goes around again. A **tool** is any way it reaches your system: a shell command, an API call, a function it can invoke. That's it.
+First, some definitions:
 
-So we've got three boxes: the agent on the left, your system on the right, and the interface in the middle. And here's the claim I want to plant now and pay off later. The middle box is the whole ballgame. You can hold the model constant, hold the task constant, and just swap that middle box, and your cost, your number of round-trips, and even whether the agent succeeds at all will swing by two or three times.
+- An **agent** is just a language model running in a loop that's allowed to call tools. It reads some context, takes an action, and reads the result. Rinse and repeat.
+- A **tool** is any way it reaches your system: a shell command, an API call, a function it can invoke. That's it.
 
-There are three contenders for that middle box. A CLI, an MCP server, and the new one, which is called AXI and which I'll get to properly in a bit. For now just hold the name.
+So we've got three boxes: the agent on the left, your system on the right, and the interface in the middle. Here's the claim I want to plant now and revisit later. The middle box is the whole ballgame. You can hold the model constant, hold the task constant, and just swap that middle box. This affects your cost, your number of round-trips, and your agent's success rate.
+
+There are three contenders for that middle box. A CLI, an MCP server, and the new one, which is called AXI. We'll get to it properly in a bit; for now just remember the name.
 
 ## Slide 3 — What "an agent using a tool" actually costs (1:30)
 
 [Advance. Loop diagram: read context → call tool → result back into context → repeat.]
 
-Before we compare them, we need a scorecard, and it comes from how the loop actually charges you. Watch the cycle. The model reads its context, calls a tool, the tool returns some output, and that output gets pasted back into the context for the next round. Then it repeats.
+Before we compare them, we need a scorecard, and it comes from how the loop actually charges you. Look at this cycle: the model reads its context, calls a tool, and that tools output gets captured into the context for the next round. This happens repeatedly.
 
-Three things you pay for on every task. First, **input tokens**: everything the model has to read, which means the descriptions of the tools available to it plus every result that comes back. Second, **turns**: the number of round-trips, and this is the one people forget. Third, **failures**: retries when it gets confused, or worse, a confident wrong answer.
+There are three things you pay for on every task.
 
-Here's the insight that makes the whole talk work, so let it land. Tokens are charged *per turn*. Every round-trip re-sends the context. So if your interface is bloated, you don't pay that bloat once. You pay it again and again, every single turn, for the length of the task. Keep three numbers in your head as we go: tokens, turns, success. That's how we'll score all three.
+- First, **input tokens**: the model has to read descriptions of the tools available and the results that comes back. These both count towards input tokens.
+- Second, **turns**: the number of round-trips, which people usually overlook.
+- Third, **failures**: retries when it gets confused, or worse, a confident wrong answer.
+
+Remember, tokens are charged *per turn*. Every round-trip re-sends the context. If your interface is bloated, you don't pay that bloat once. You pay it again and again, every single turn, for the length of the task. Keep three numbers in your head as we go: tokens, turns, success. That's how we'll score all three.
 
 ## Slide 4 — Contender #1: the CLI (2:00)
 
 [Advance. Left: terminal dumping verbose JSON. Right: pros and cons.]
 
-Start with the humble command-line tool, the CLI. These were built for a person sitting at a terminal, and the nice thing is an agent can just shell out and read whatever text comes back, exactly like a human would.
+Start with the humble command-line tool, the CLI. These were built for a person sitting at a terminal, and the nice thing is an agent can just run commands and read whatever text comes back, exactly like a human would.
 
-The upside is real. A CLI is cheap, because nothing gets described to the model up front: the tool isn't announced, the agent just runs it. It's universal, it composes with pipes and other tools, and it works offline. If the thing you need already exists as a command, you're mostly done.
+This has real upsides. A CLI is cheap, because nothing is described to the model up front: the tool isn't announced, the agent just runs it. It's universal, it composes with pipes and other tools, and it works offline. If the action you need already exists as a command, you're mostly done.
 
-The trouble is that the output was shaped for a human. It's prose, or it's verbose JSON meant to be skimmed, and the agent has to wade through all of it. There's a subtler problem too: with a CLI, doing a thing and seeing what happened are usually two separate commands. Run one to act, run another to observe, and every extra command is another turn, which is another full re-read of the context. Errors tend to be messy, and discoverability is poor, so the agent guesses at flags and learns by hitting errors. On the published benchmark we'll come back to, a raw CLI lands around 86% success. Cheap, but it drops tasks.
+The trouble is that the output was shaped for a human. It's prose, or verbose JSON meant to be skimmed, and the agent has to wade through all of it. There's a subtler problem too: with a CLI, performing an action and observing the outcome are usually two separate commands. Every extra command is another turn, which is another full re-read of the context. Errors tend to be messy, and discoverability is poor, so the agent guesses at flags and learns by hitting errors. On the published benchmark we'll come back to, a raw CLI lands around 86% success. Cheap, but it drops tasks.
 
 ## Slide 5 — Contender #2: MCP (2:30)
 
 [Advance. Left: MCP server exposing N tools, each schema injected into context. Right: pros and cons.]
 
-The second contender is MCP, the Model Context Protocol. It's a standard way to hand an agent a set of typed tools, and the agent gets a structured menu: here are the tools, here's what each one takes, here's what each returns. It's become the default way people plug agents into systems, and for good reason.
+The second contender is MCP, which stands for Model Context Protocol. It's a standard way to hand an agent a set of typed tools, and the agent gets a structured menu: here are the tools, here's what each one takes, here's what each returns. It's become the default way people plug agents into systems, and for good reason.
 
-The good is genuinely good. The inputs and outputs are structured rather than free text. The tools are discoverable, because their schemas advertise what's on offer, so the agent isn't guessing. Arguments are typed. And there's real ecosystem momentum behind it.
+MCP has its strengths. The inputs and outputs are structured rather than free text. The tools are discoverable, because their schemas advertise what's on offer, so the agent doesn't have to guess. Additionally, arguments are typed and there's a strong ecosystem behind it.
 
-But there's a cost, and it's the surprising part. Every tool's schema, its name, its description, its parameters, gets loaded into the model's context so the agent knows the menu. And that cost scales with the number of tools. A browser MCP server exposing around thirty tools can push a single task up toward a hundred and eighty-five thousand input tokens. You can try to be clever and load the schemas lazily, only fetching a tool's definition when it's needed. But that just trades token cost for more turns, more round-trips to go look things up, and it often comes out a wash or worse.
+However, there's a hidden cost. Every tool's name, description, and parameters, gets loaded into the model's context so the agent knows the menu. This cost scales with the number of tools. A browser MCP server exposing around thirty tools can push a single task up toward 185,000 input tokens. You can try to be clever and load the schemas lazily, only fetching a tool's definition when it's needed. However, that trades token cost for more turns and more round-trips to look things up, which is often not beneficial.
 
 [For the leads in the room, slow down here.]
 
-So here's the thing worth saying plainly, especially to the folks thinking about budget. On that same benchmark, MCP is two to three times the cost of the CLI: about fifteen cents a task against five. The more structured option is often the more expensive one.
+In simple terms, MCP is two to three times the cost of the CLI on that same benchmark: we're talking fifteen cents a task versus five. The more structured option is often the more expensive one.
 
 ## Slide 6 — The scorecard so far / the gap (1:30)
 
 [Advance. Two-column table, CLI vs MCP, on tokens/cost/turns/success/discoverability. Third column blank: "AXI — ?".]
 
-So where does that leave us. The CLI is cheap and composable, but it's human-shaped and it isn't reliable enough. MCP is structured and discoverable, but it's heavy on tokens and heavy on turns. Look at the table and it reads like a straight tradeoff: pick cheap, or pick reliable, one or the other.
+So, where does that leave us? The CLI is cheap and composable, but it's human-shaped and it isn't reliable enough. MCP is structured and discoverable, but it's heavy on tokens and turns. The table looks like a straight tradeoff: pick cheap, or pick reliable, but not both.
 
-That framing is exactly what the third column challenges. The whole premise of AXI is that this is a false choice, that you don't actually have to trade one for the other. So the obvious question is: what if we designed the interface for the agent from the start, instead of handing it something built for a human or something built for a protocol?
+That framing is exactly what the third column challenges. The whole premise of AXI is that we can choose both - we can have it cheap and reliable. The obvious question is: what if we designed the interface for the agent from the start, instead of handing it something built for a human or something built for a protocol?
 
 ## Slide 7 — AXI: it's design principles, not a new protocol (2:00)
 
 [Advance. Statement slide. "AXI = Agent eXperience Interface: agent-native CLI tools that treat token budget as a first-class constraint."]
 
-Here's the reframe. The CLI-versus-MCP argument is really an argument about the protocol, about the plumbing. AXI, the Agent eXperience Interface, says the protocol isn't where the real lever sits. The lever is design discipline. And in practice AXI *is* a CLI, just one built with the agent as the primary user, not the human.
+Here's the reframe. The CLI-versus-MCP argument is really an argument about the protocol, about the plumbing. AXI, the Agent eXperience Interface, says the protocol isn't where the real lever sits. The lever is design discipline. In practice, AXI *is* a CLI, just one built with the agent as the primary user, not the human.
 
-The goal it sets itself is to get the reliability of MCP, that structure and discoverability, at the cost profile of a CLI. Both, not one or the other. And concretely it's ten design principles plus a couple of reference implementations: one for GitHub, one for the browser. It's not a runtime you install or a framework you adopt. It's a set of habits with worked examples.
+The goal is to have the reliability of MCP, whilst running at a cheaper cost like similar to a CLI. Both, not one or the other. The author came up with ten design principles and a couple of reference implementations: one for GitHub, one for the browser. It's not a runtime you install or a framework you adopt. It's a set of habits with worked examples.
 
 [Say this part out loud, don't skip it — the internal audience will be looking for it.]
 
-I want to be honest about what this is, because you'll wonder. AXI is young and it's opinionated, and the headline benchmark numbers are published by the project's own author. So treat the principles as solid engineering (they'll make sense as we go through them) and treat the exact numbers as a strong hypothesis rather than gospel. The good news is we're going to verify the direction ourselves, live, in a few minutes.
+I want to be honest about what this is, because you'll wonder. AXI is young and it's opinionated, and the headline benchmark numbers are published by the project's own author. We should treat the principles as solid engineering, and take the numbers as a strong hypothesis rather than fact. The good news is we're going to verify the numbers ourselves, live.
 
 ## Slide 8 — The 10 principles, grouped (2:00)
 
@@ -88,15 +95,28 @@ I want to be honest about what this is, because you'll wonder. AXI is young and 
 
 The ten principles sort into three buckets, and I'll skim rather than march through every one.
 
-The first bucket is **efficiency**, about what the agent has to read. Token-efficient output, using a format called TOON that's roughly forty percent smaller than the equivalent JSON. Minimal default schemas: return the three or four fields the task needs, not the ten-plus fields your database happens to have. And content truncation, so long fields get cut down with a `--full` flag as the escape hatch when you really do want everything.
+The first bucket is **efficiency**, which is what the agent has to read. Token-efficient output, using a format called TOON that's roughly 40% smaller than the equivalent JSON. Minimal default schemas: return the three or four fields the task needs, not the ten-plus fields your database happens to have. Include content truncation, so long fields get cut down with a `--full` flag as the escape hatch when you need the full output.
 
-The second bucket is **robustness**, about the agent not getting stuck. Pre-computed aggregates, so counts and statuses come back up front and the agent doesn't spend a round-trip working them out. Definitive empty states, so a query with no results says "zero results" rather than returning silence the agent has to interpret. And structured errors with real exit codes and no interactive prompts, because an agent can't answer a "are you sure? [y/n]".
+The second bucket is **robustness**, which means making sure the agent doesn't get stuck. To do this, we need three things:
 
-The third is **discoverability**, about the agent finding its way. Ambient context through hooks and skills, a content-first default so running the tool bare gives you live data instead of a help screen, contextual hints about the next step, and consistent `--help` everywhere.
+* **Pre-calculated data:** Provide totals and statuses right away so the agent doesn't waste a turn calculating them.
+* **Clear empty states:** If a query has no results, explicitly state "zero results" instead of returning blank silence that the agent has to figure out.
+* **Structured errors:** Use clear error codes and remove interactive prompts. An agent cannot answer questions like "Are you sure? [y/n]."
 
-The four with the coloured border (the efficiency cluster plus aggregates) are the ones we'll watch run on a real app shortly. And one definition before we look at code: **TOON** is a compact, tabular text encoding. Think the density of CSV with the structure of JSON. First, here's what these four look like as code.
+The third bucket is **discoverability**, which helps the agent figure out what it can do. We achieve this through:
 
-## Slide 8b — The 4 marquee principles, in code (2:00)
+* **Ambient context:** Using hooks and skills to let the agent know where it is and what is available.
+* **A content-first default:** Running a bare command should immediately return live data rather than an unhelpful text manual.
+* **Next-step hints:** Providing contextual clues on what to do next.
+* **Consistent help:** Standardizing the `--help` command across every tool.
+
+We will shortly watch a real app run the four patterns highlighted by the colored border (the efficiency group plus data aggregates).
+
+But before we dive into the code, let's define one key term: **TOON**. This is a compact, text-based table format. It gives you the high data density of a CSV file combined with the clear structure of JSON.
+
+First, let's look at how these four patterns look in practice as code.
+
+## Slide 8b — The 4 select principles, in code (2:00)
 
 [Advance. Before/after snippets, side by side. Point at the one changed line per pair — don't narrate every token. The room reads code slower than you talk.]
 
@@ -149,9 +169,9 @@ node scripts/capture.mjs mcp
 cat out/mcp-payload.json | head -40
 ```
 
-[Six tool schemas plus one result. Let the room see the wall, then say "…and it continues" rather than scrolling forever.]
+[The full tool catalog — 21 schemas — plus one result. Let the room see the wall, then say "…and it continues" rather than scrolling forever.]
 
-This is what MCP puts in front of the model. Six tools, each with a full schema (parameters, types, descriptions), and then the actual result at the end. The structure and the discoverability are genuinely useful; the agent knows exactly what it can do. But this whole menu gets loaded into context, and it's charged every single turn. Six tools here. Real servers ship thirty. That's the schema tax, and you can see it.
+This is what MCP puts in front of the model. Twenty-one tools — the kind of surface a real CI server has: runs, jobs, logs, artifacts, workflows, deployments — each with a full schema of parameters, types, and descriptions, and then the actual result at the end. The structure and the discoverability are genuinely useful; the agent knows exactly what it can do. But this whole menu gets loaded into context, and it's charged every single turn. That's the schema tax, and you can see it.
 
 [Step 3 — the finished AXI command. ~1 min. Keep slide 8b one click away. Type:]
 
@@ -186,13 +206,13 @@ And there's the payoff. Same task, three payloads, counted with a tokenizer. Hol
 
 [Advance to the results table. Read the numbers off it.]
 
-Here are the numbers we just generated. MCP is the heaviest at two thousand six hundred and fifty-five tokens: six schemas plus a verbose result. The CLI comes in at one thousand three hundred and fifty-eight, that's 49% below MCP, so about half. And AXI is two hundred and thirty-six, ninety-one percent below MCP, and eighty-three percent below the CLI.
+Here are the numbers we just generated. MCP is the heaviest at three thousand eight hundred and ninety-seven tokens: twenty-one tool schemas plus a result. The CLI comes in at one thousand three hundred and fifty-eight, that's 65% below MCP, roughly a third of it. And AXI is two hundred and thirty-six, ninety-four percent below MCP, and eighty-three percent below the CLI.
 
 [Say the honest framing plainly. This is the line the room will remember you for.]
 
 One caveat, stated up front. This is the per-call payload difference, measured with an approximate tokenizer. It's close to Claude's but not identical. So read the direction and the magnitude, not the third digit. The shape is what's real.
 
-And one honest aside, because a sharp lead will ask. Notice the CLI is only about half of MCP here, not the tiny fraction you might have expected. That's because our server ships just six tools. The schema tax scales with tool count: a real server with thirty tools pushes MCP far higher and opens that gap right up. AXI's ninety-one percent barely moves either way. But this is still one call. An agent never calls a tool just once, so what happens across a whole task?
+And one honest aside, because a sharp lead will ask. The MCP payload is nearly three times the CLI's verbose dump — and that's the twenty-one tool schemas riding along in context. That's a realistic CI surface, not padding; a bigger server pushes MCP higher still, a leaner one narrows it. AXI's ninety-four percent barely moves either way. But this is still one call. An agent never calls a tool just once, so what happens across a whole task?
 
 ## Slide 12 — Real agent, our app: the recorded run (2:30)
 
@@ -200,11 +220,11 @@ And one honest aside, because a sharp lead will ask. Notice the CLI is only abou
 
 [Say this out loud so it's never mistaken for sleight of hand.]
 
-This is a recording, not a live agent. But it *is* a genuine agent, Claude, doing the real task on the same app we just ran, three times, once through each interface. It's recorded for one reason: the numbers stay stable, and there's no network or API risk on stage. Same model, same task, same app: the only thing that changes is the interface, which is exactly the variable we care about.
+This is a recording, not a live agent. But it *is* a genuine agent, Claude, doing a real, multi-step task on the same app we just ran, three times, once through each interface. The task: for each failing run, figure out which job failed and whether it's a flaky infrastructure issue or a real regression. It's recorded for one reason: the numbers stay stable, and there's no network or API risk on stage. And the comparison is fair — same minimal system prompt, each interface gets only its own tools, no prompt caching — so the tokens you see belong to the interface, not to some harness overhead. Same model, same task, same app: the only thing that changes is the interface, which is exactly the variable we care about.
 
 [Walk the counters as they move. Point at the on-screen table for the figures.]
 
-Watch what compounds. MCP re-reads that big schema menu every turn, and it takes more turns to get there, so it burns the most tokens and the most round-trips. AXI finishes in the fewest turns with a fraction of the tokens. The CLI is cheap but wobblier: it gets there, but less reliably.
+Watch what compounds. MCP's list gives back summaries, so to judge each failure the agent has to drill in — pull the logs for one run, then the next — and every one of those turns re-reads all twenty-one schemas. So it burns the most tokens and the most round-trips. AXI answers the whole thing in a single compact call, because the interface did the drill-down for it. The CLI dumps everything in one big turn: cheaper on round-trips, but it's a wall of JSON to reason over, and it's wobblier.
 
 [TODO: fill the three numbers — turns / total tokens / cost per interface — once `node scripts/agent-run.mjs` has been run from `ci-demo/`. Read them off the on-screen table rather than from memory; expect the same shape as the published benchmark on slide 13 (MCP heaviest on turns and tokens, AXI lowest on both). Do not invent figures.]
 

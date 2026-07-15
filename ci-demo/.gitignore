@@ -1,4 +1,7 @@
 node_modules/
+# local secrets for the real-agent harness — never commit
+.env
+.env.local
 # only the project's own build output — NOT the committed vendor/axi-sdk-js/dist
 /dist/
 /out/

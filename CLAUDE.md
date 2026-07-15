@@ -32,16 +32,28 @@ Done and verified:
 
 - `ci-demo/` scaffold: `package.json`, `tsconfig.json` (NodeNext, strict), pnpm.
 - `ci-demo/data/runs.json` — 8 seeded runs (3 failed / 2 running / 3 success).
-- `ci-demo/src/core.ts` — the shared domain core, with a passing vitest suite.
+- `ci-demo/src/core.ts` — the shared domain core, with a passing vitest suite
+  (7 tests). Now also exports drill-down helpers: `runSummary`, `jobRollup`,
+  `failingJobs`, `classifyFailure` (used by the multi-step task).
+- All three interfaces: `src/cli.ts` (verbose JSON), `src/mcp-server.ts`
+  (**~21 realistic CI tools**; `list_runs` returns summaries; exports `callTool`),
+  `src/axi.ts` (`ci list` + a one-call `ci failures` affordance).
+- Measurement: `scripts/capture.mjs`, `scripts/token-diff.mjs`, and the **fair,
+  multi-provider** `scripts/agent-run.mjs` (minimal shared prompt, per-interface
+  tools, token buckets, `--repeats`). Providers via `--provider` / auto-detect:
+  `anthropic-cli` (Claude Code subscription, no key — default), `openai`
+  (`OPENAI_API_KEY`, gpt-4o-mini), `anthropic-api` (`ANTHROPIC_API_KEY`). Keys
+  go in a gitignored `.env` (see `.env.example`), auto-loaded by `pnpm agent-run`.
 - Vendored `axi-sdk-js` (see below); `import { renderOutput } from "axi-sdk-js"`
   resolves and TOON-encodes.
 - `.github/workflows/ci.yml` — build + test on push/PR.
 
-Not built yet (the parallel work):
+Not built yet:
 
-- `src/cli.ts`, `src/mcp-server.ts`, `src/axi.ts` (the three interfaces).
-- `scripts/capture.mjs`, `scripts/token-diff.mjs`, `scripts/agent-run.mjs`.
-- `demo.sh`, the slides site, the presentation script.
+- `demo.sh`, the slides *site* (only the Markdown deck/outline + spoken script
+  exist under `docs/`), the two recordings under `recording/`.
+- The slide-12 agent-run numbers — run `agent-run.mjs` with `ANTHROPIC_API_KEY`
+  to fill them in (needs API access this build env lacks).
 
 ## Commands
 
@@ -54,10 +66,17 @@ pnpm install            # frozen, offline; links the vendored SDK
 pnpm build              # tsc → dist/
 pnpm test               # vitest (fast, no infra)
 
-pnpm cli  -- list --status failed   # once src/cli.ts exists
-pnpm mcp                            # once src/mcp-server.ts exists
-pnpm axi  -- list --status failed   # once src/axi.ts exists
+pnpm cli  -- list --status failed   # verbose JSON dump
+pnpm mcp                            # stdio MCP server (~21 tools)
+pnpm axi  -- list --status failed   # compact TOON list
+node dist/axi.js failures           # multi-step task, one compact call
 node dist/axi.js list --status failed --full
+node scripts/token-diff.mjs         # offline per-call payload diff
+
+# real-agent run (slide 12). Defaults to your Claude Code subscription (no key).
+pnpm agent-run                              # auto-loads .env, auto-detects provider
+pnpm agent-run -- --provider openai --repeats 3   # gpt-4o-mini via OPENAI_API_KEY (.env)
+cp .env.example .env                        # then add OPENAI_API_KEY for the openai path
 ```
 
 ## The shared core contract — do NOT change these signatures
@@ -72,14 +91,20 @@ loadRuns(): Run[]                               // reads data/runs.json, offline
 filterByStatus(runs: Run[], status: string): Run[]
 summarize(runs: Run[]): string                  // "8 runs · 3 failed · 2 running · 3 passed"
 truncate(text: string, max: number): string     // "<max chars>…(N chars, use --full)"
+// drill-down helpers (added for the multi-step task — additive, safe to use):
+runSummary(run: Run): RunSummary                // list-endpoint shape (no logs/jobs[])
+jobRollup(run: Run): string                     // "3 jobs · 2 ok · 1 failed"
+failingJobs(run: Run): string[]                 // names of jobs with status "failed"
+classifyFailure(run: Run): FailureVerdict       // { classification, evidence } from logs
 ```
 
-Types exported: `Run`, `Job`, `Commit`, `RunStatus`, `JobStatus`. A `Run` has
-`id, status, branch, commit{sha,message,author}, trigger, duration_seconds,
-created_at, jobs[], logs`.
+Types exported: `Run`, `Job`, `Commit`, `RunStatus`, `JobStatus`, `RunSummary`,
+`FailureVerdict`, `FailureClass`. A `Run` has `id, status, branch,
+commit{sha,message,author}, trigger, duration_seconds, created_at, jobs[], logs`.
 
-The measured task everywhere is **"list the pipeline runs that are failing"**
-(`--status failed`), which returns `run_8f2a, run_3d71, run_b90c`.
+Two measured tasks: the **tokenizer diff** uses the single call "list failing
+runs" (`--status failed` → `run_8f2a, run_3d71, run_b90c`); the **agent run**
+uses the multi-step "classify each failing run" task (`ci failures`).
 
 ## What each interface must be
 
@@ -87,15 +112,20 @@ The measured task everywhere is **"list the pipeline runs that are failing"**
   `JSON.stringify(runs, null, 2)` of the full objects. Deliberately verbose: no
   summary line, no next-step hint. This is the human-shaped baseline.
 - **MCP (`src/mcp-server.ts`, bin `ci-mcp`)** — a stdio `@modelcontextprotocol/sdk`
-  server exposing ~6 tools (`list_runs`, `get_run`, `list_jobs`, `get_logs`,
-  `retry_run`, `cancel_run`), each with a full JSON-schema `inputSchema` and
-  description, so the schema tax is visible.
-- **AXI (`src/axi.ts`, bin `ci`)** — the finished command. Implements four
-  principles exactly as `docs/live_demo_script.md` §0 shows: P1 TOON output via
-  `renderOutput`, P2 minimal 4-field schema (`id, status, branch, logs`), P4 a
-  pre-computed `summary` line, P3 `truncate` with a `--full` escape hatch. Plus a
-  definitive empty state and a `next` hint. Keep it line-for-line consistent with
-  the slide-8b snippets in `docs/presentation_outline.md` — if they drift, fix one.
+  server exposing a realistic **~21-tool** CI surface (runs, jobs, logs, search,
+  annotations, artifacts, workflows, branches, metrics, deployments, …), each
+  with a full JSON-schema `inputSchema`, so the schema tax is visible.
+  `list_runs` returns lightweight **summaries** (no logs) — real list-endpoint
+  behavior — so classifying a failure requires drilling in (extra turns).
+  Exports `callTool(name, args)` so `agent-run.mjs` can dispatch in-process.
+- **AXI (`src/axi.ts`, bin `ci`)** — the finished command, two subcommands:
+  - `ci list [--status] [--full]` — implements four principles exactly as
+    `docs/live_demo_script.md` §0 shows: P1 TOON via `renderOutput`, P2 minimal
+    4-field schema, P4 a pre-computed `summary` line, P3 `truncate` + `--full`.
+    Plus a definitive empty state and a `next` hint. Keep it line-for-line
+    consistent with the slide-8b snippets — if they drift, fix one.
+  - `ci failures` — answers the multi-step task in ONE compact call: each failing
+    run's failing job(s) + a flaky-vs-regression verdict (P4 taken to its end).
 
 ## Conventions
 

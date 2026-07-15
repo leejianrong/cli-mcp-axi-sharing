@@ -19,7 +19,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { loadRuns, filterByStatus } from "../dist/core.js";
+import { loadRuns, filterByStatus, runSummary } from "../dist/core.js";
 import { TOOLS } from "../dist/mcp-server.js";
 
 // The one task measured everywhere.
@@ -55,12 +55,12 @@ export function captureCli() {
 
 /**
  * MCP payload: what an MCP client actually loads into context for this task —
- * all six tool definitions (the "schema tax") PLUS one representative tool
- * result (the list_runs result for status=failed: the full run objects, exactly
- * what the tool returns over the wire).
+ * ALL tool definitions (the "schema tax", ~18 tools) PLUS one representative
+ * tool result (the list_runs result for status=failed: lightweight summaries,
+ * exactly what the realistic list endpoint returns over the wire).
  */
 export function captureMcp() {
-  const result = filterByStatus(loadRuns(), STATUS);
+  const result = filterByStatus(loadRuns(), STATUS).map(runSummary);
   const payload = {
     tools: TOOLS,
     sampleCall: { name: "list_runs", arguments: { status: STATUS } },

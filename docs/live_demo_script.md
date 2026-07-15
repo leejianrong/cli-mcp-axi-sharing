@@ -23,7 +23,7 @@ ci-demo/
   scripts/capture.mjs       # writes cli-output.json, mcp-payload.json to /out for the diff
   out/                      # captured payloads (regenerated during the demo)
   recording/demo-run.mp4    # (or asciinema .cast) — full dry-run capture = your fallback
-  recording/agent-run.mp4   # real agent (Claude) doing the task via each interface — PLAYED on slide 12
+  recording/agent-run.mp4   # real agent (gpt-4o-mini) doing the task via each interface — PLAYED on slide 12
   scripts/agent-run.mjs     # drives a real agent 3× (once per interface) to PRODUCE agent-run.mp4
   vendor/axi-sdk-js/        # committed build of axi-sdk-js (see its README for provenance)
   package.json              # deps: axi-sdk-js (file:./vendor/axi-sdk-js), @toon-format/toon,
@@ -86,9 +86,9 @@ console.log(renderOutput(output));                  // Principle 1: TOON, ~40% s
 
 ### The real-agent recording (`recording/agent-run.mp4`) — produce ahead, play on slide 12
 This is the "genuine agent on screen" moment. Produce it once, offline of the talk, and play it from the deck.
-- **What it shows:** a real Claude agent completing the **multi-step task** — _"for each failing run, which job failed, and is it flaky/infra or a real regression?"_ — **three times**, once per interface (CLI, MCP, AXI), with **turns · token buckets · cost** captured for each. `scripts/agent-run.mjs` runs the three and prints the table; screen-capture it (or capture the terminal + overlay the numbers in post).
+- **What it shows:** a real agent (gpt-4o-mini) completing the **multi-step task** — _"for each failing run, which job failed, and is it flaky/infra or a real regression?"_ — **three times**, once per interface (CLI, MCP, AXI), with **turns · token buckets · cost** captured for each. `scripts/agent-run.mjs` runs the three and prints the table; screen-capture it (or capture the terminal + overlay the numbers in post).
 - **How it runs (the fair harness):** the script uses a **minimal shared system prompt** and gives each condition **only its own tools** (one thin run-command tool for CLI/AXI; the full 21-tool catalog for MCP) — so the tokens measured belong to the interface, not to a harness baseline. It's **multi-provider** (`--provider`, else auto-detected):
-  - `anthropic-cli` — uses your **Claude Code subscription, no API key** (`claude` CLI with a minimal `--system-prompt` + `--exclude-dynamic-system-prompt-sections` so it's fair). Best for the recording; cost is the CLI's estimate. **This is the default when no API key is set.**
+  - `anthropic-cli` — uses your **Claude Code subscription, no API key** (`claude` CLI with a minimal `--system-prompt` + `--exclude-dynamic-system-prompt-sections` so it's fair). Cost is the CLI's estimate. **This is the default when no API key is set.**
   - `openai` — raw `fetch` to Chat Completions; needs `OPENAI_API_KEY`; default `gpt-4o-mini`. Cheap dev testing (and the tokenizer diff is exact for it).
   - `anthropic-api` — raw `fetch` to the Messages API; needs `ANTHROPIC_API_KEY` (pay-as-you-go); exact, order-independent cost, no prompt caching.
 
@@ -107,7 +107,7 @@ This is the "genuine agent on screen" moment. Produce it once, offline of the ta
 - [ ] All three interfaces run clean: `ci-cli list --status failed`, `ci-mcp` capture, and `ci list --status failed`.
 - [ ] `scripts/capture.mjs` and `scripts/token-diff.mjs` run clean and produce numbers.
 - [ ] **Recording of the full run captured** (`recording/demo-run.mp4` or asciinema) and it plays without network — this is your fallback.
-- [ ] **Real-agent run recorded** (`recording/agent-run.mp4`): `node scripts/agent-run.mjs` — a genuine agent completes the multi-step task via CLI, MCP, and AXI, with **turns · tokens · cost** visible. Defaults to your **Claude Code subscription** (no key); or `--provider openai` / `anthropic-api` with the matching key. Plays on **slide 12**, always from the recording (no live agent on stage).
+- [ ] **Real-agent run recorded** (`recording/agent-run.mp4`): `node scripts/agent-run.mjs --provider openai` — a genuine agent completes the multi-step task via CLI, MCP, and AXI, with **turns · tokens · cost** visible. **Slide 12's numbers are from gpt-4o-mini** (`--provider openai`); the harness also runs on your Claude Code subscription (the default, no key) or `anthropic-api`. Plays on **slide 12**, always from the recording (no live agent on stage).
 - [ ] Slide 12 summary table filled with the agent-run numbers; slide 8b code snippets match the shipped `src/axi.ts` (same lines).
 - [ ] Terminal prepped per the **UI/terminal optimizations** section below (no editor needed).
 - [ ] Dry-run done end to end; slide 11 numbers filled in from the real `token-diff` output.
@@ -138,7 +138,7 @@ cat out/mcp-payload.json | head -40
 ```
 **Audience sees:** the tool definitions — the full ~21-tool catalog, each with a JSON schema, descriptions, parameter types — followed by the result.
 
-**Say:** "MCP gives the agent structure and discoverability, which is genuinely useful. But *this whole menu* gets loaded into context — and it's charged every turn. Six tools here; real servers ship thirty. This is the schema tax."
+**Say:** "MCP gives the agent structure and discoverability, which is genuinely useful. But *this whole menu* gets loaded into context — and it's charged every turn. Twenty-one tools here, and real servers ship even more. This is the schema tax."
 
 > If you prefer, show the schemas in the editor instead of `cat` — whichever reads bigger on the projector.
 

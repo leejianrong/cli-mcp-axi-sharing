@@ -220,7 +220,7 @@ And one honest aside, because a sharp lead will ask. The MCP payload is nearly t
 
 [Say this out loud so it's never mistaken for sleight of hand.]
 
-This is a recording, not a live agent. But it *is* a genuine agent, Claude, doing a real, multi-step task on the same app we just ran, three times, once through each interface. The task: for each failing run, figure out which job failed and whether it's a flaky infrastructure issue or a real regression. It's recorded for one reason: the numbers stay stable, and there's no network or API risk on stage. And the comparison is fair — same minimal system prompt, each interface gets only its own tools, no prompt caching — so the tokens you see belong to the interface, not to some harness overhead. Same model, same task, same app: the only thing that changes is the interface, which is exactly the variable we care about.
+This is a recording, not a live agent. But it *is* a genuine agent, gpt-4o-mini, doing a real, multi-step task on the same app we just ran, three times, once through each interface. The task: for each failing run, figure out which job failed and whether it's a flaky infrastructure issue or a real regression. It's recorded for one reason: the numbers stay stable, and there's no network or API risk on stage. And the comparison is fair — same minimal system prompt, each interface gets only its own tools, no prompt caching — so the tokens you see belong to the interface, not to some harness overhead. Same model, same task, same app: the only thing that changes is the interface, which is exactly the variable we care about.
 
 [Walk the counters as they move. Point at the on-screen table for the figures.]
 

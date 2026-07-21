@@ -1,0 +1,1572 @@
+{
+  "schemaVersion": 1,
+  "provider": "openai",
+  "model": "gpt-4o-mini",
+  "task": "For each failing pipeline run, tell me which job failed and whether the failure looks like a flaky/infrastructure issue or a real code regression. List each run's id, its failing job, and your classification.",
+  "system": "You are a CI/CD pipeline assistant. Use the provided tools to inspect real pipeline data — never guess. When you have the answer, reply with a concise final summary and stop.",
+  "recordedAt": "2026-07-21T18:28:57.621Z",
+  "interfaces": [
+    {
+      "label": "CLI",
+      "toolCatalog": [
+        {
+          "name": "run_ci_cli",
+          "description": "Run the `ci-cli` command-line tool and return its output. Pass the arguments as an array of strings, e.g. [\"list\",\"--status\",\"failed\"]. Pass [\"--help\"] to discover its available subcommands."
+        }
+      ],
+      "events": [
+        {
+          "seq": 0,
+          "type": "turn_start",
+          "turn": 1,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "total": 0
+          }
+        },
+        {
+          "seq": 1,
+          "type": "assistant_text",
+          "turn": 1,
+          "tokens": {
+            "input": 184,
+            "output": 21,
+            "total": 205
+          },
+          "text": ""
+        },
+        {
+          "seq": 2,
+          "type": "tool_call",
+          "turn": 1,
+          "tokens": {
+            "input": 184,
+            "output": 21,
+            "total": 205
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "--status",
+              "failed"
+            ]
+          },
+          "callId": "call_WQTie4ZQ1Cx4fvauMMeJbfA0"
+        },
+        {
+          "seq": 3,
+          "type": "tool_result",
+          "turn": 1,
+          "tokens": {
+            "input": 184,
+            "output": 21,
+            "total": 205
+          },
+          "name": "run_ci_cli",
+          "callId": "call_WQTie4ZQ1Cx4fvauMMeJbfA0",
+          "text": "[\n  {\n    \"id\": \"run_8f2a\",\n    \"status\": \"failed\",\n    \"branch\": \"feat/checkout-retry\",\n    \"trigger\": \"push\",\n    \"duration_seconds\": 342,\n    \"created_at\": \"2026-07-13T09:21:04Z\",\n    \"jobs\": \"3 jobs · 2 ok · 1 failed\"\n  },\n  {\n    \"id\": \"run_3d71\",\n    \"status\": \"failed\",\n    \"branch\": \"fix/session-expiry\",\n    \"trigger\": \"pull_request\",\n    \"duration_seconds\": 176,\n    \"created_at\": \"2026-07-13T11:47:52Z\",\n    \"jobs\": \"3 jobs · 1 ok · 1 failed · 1 other\"\n  },\n  {\n    \"id\": \"run_b90c\",\n    \"status\": \"failed\",\n    \"branch\": \"chore/bump-node-24\",\n    \"trigger\": \"push\",\n    \"duration_seconds\": 58,\n    \"created_at\": \"2026-07-13T14:02:19Z\",\n    \"jobs\": \"3 jobs · 0 ok · 1 failed · 2 other\"\n  }\n]\n",
+          "chars": 703,
+          "isError": false
+        },
+        {
+          "seq": 4,
+          "type": "turn_start",
+          "turn": 2,
+          "tokens": {
+            "input": 184,
+            "output": 21,
+            "total": 205
+          }
+        },
+        {
+          "seq": 5,
+          "type": "assistant_text",
+          "turn": 2,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          },
+          "text": ""
+        },
+        {
+          "seq": 6,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "inspect",
+              "run_8f2a"
+            ]
+          },
+          "callId": "call_lMnYLfuJHmST3bQ5wkuaeQY6"
+        },
+        {
+          "seq": 7,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "inspect",
+              "run_3d71"
+            ]
+          },
+          "callId": "call_j3jsnN4xzRRO6RY7vWRv8dYq"
+        },
+        {
+          "seq": 8,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "inspect",
+              "run_b90c"
+            ]
+          },
+          "callId": "call_knTlrHRPfJAtK3mHQl5d6Wj7"
+        },
+        {
+          "seq": 9,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          },
+          "name": "run_ci_cli",
+          "callId": "call_lMnYLfuJHmST3bQ5wkuaeQY6",
+          "text": "ci-cli: unknown command 'inspect'. Run 'ci-cli --help' for usage.",
+          "chars": 65,
+          "isError": false
+        },
+        {
+          "seq": 10,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          },
+          "name": "run_ci_cli",
+          "callId": "call_j3jsnN4xzRRO6RY7vWRv8dYq",
+          "text": "ci-cli: unknown command 'inspect'. Run 'ci-cli --help' for usage.",
+          "chars": 65,
+          "isError": false
+        },
+        {
+          "seq": 11,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          },
+          "name": "run_ci_cli",
+          "callId": "call_knTlrHRPfJAtK3mHQl5d6Wj7",
+          "text": "ci-cli: unknown command 'inspect'. Run 'ci-cli --help' for usage.",
+          "chars": 65,
+          "isError": false
+        },
+        {
+          "seq": 12,
+          "type": "turn_start",
+          "turn": 3,
+          "tokens": {
+            "input": 662,
+            "output": 103,
+            "total": 765
+          }
+        },
+        {
+          "seq": 13,
+          "type": "assistant_text",
+          "turn": 3,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          },
+          "text": ""
+        },
+        {
+          "seq": 14,
+          "type": "tool_call",
+          "turn": 3,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "run_8f2a",
+              "--jobs"
+            ]
+          },
+          "callId": "call_Y78uF3Xkt900iArE1YkcFSfO"
+        },
+        {
+          "seq": 15,
+          "type": "tool_call",
+          "turn": 3,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "run_3d71",
+              "--jobs"
+            ]
+          },
+          "callId": "call_G2ZEPG4J3bJQWvIiIJdYjTMe"
+        },
+        {
+          "seq": 16,
+          "type": "tool_call",
+          "turn": 3,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "run_b90c",
+              "--jobs"
+            ]
+          },
+          "callId": "call_g0eMTKUhQx8eNzuZubtP0atR"
+        },
+        {
+          "seq": 17,
+          "type": "tool_result",
+          "turn": 3,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          },
+          "name": "run_ci_cli",
+          "callId": "call_Y78uF3Xkt900iArE1YkcFSfO",
+          "text": "ci-cli: unexpected argument 'run_8f2a'. Run 'ci-cli --help' for usage.",
+          "chars": 70,
+          "isError": false
+        },
+        {
+          "seq": 18,
+          "type": "tool_result",
+          "turn": 3,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          },
+          "name": "run_ci_cli",
+          "callId": "call_G2ZEPG4J3bJQWvIiIJdYjTMe",
+          "text": "ci-cli: unexpected argument 'run_3d71'. Run 'ci-cli --help' for usage.",
+          "chars": 70,
+          "isError": false
+        },
+        {
+          "seq": 19,
+          "type": "tool_result",
+          "turn": 3,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          },
+          "name": "run_ci_cli",
+          "callId": "call_g0eMTKUhQx8eNzuZubtP0atR",
+          "text": "ci-cli: unexpected argument 'run_b90c'. Run 'ci-cli --help' for usage.",
+          "chars": 70,
+          "isError": false
+        },
+        {
+          "seq": 20,
+          "type": "turn_start",
+          "turn": 4,
+          "tokens": {
+            "input": 1290,
+            "output": 194,
+            "total": 1484
+          }
+        },
+        {
+          "seq": 21,
+          "type": "assistant_text",
+          "turn": 4,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          },
+          "text": ""
+        },
+        {
+          "seq": 22,
+          "type": "tool_call",
+          "turn": 4,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "jobs",
+              "--run",
+              "run_8f2a"
+            ]
+          },
+          "callId": "call_EAg6kj0W34RmdDbsMz1Xrkrx"
+        },
+        {
+          "seq": 23,
+          "type": "tool_call",
+          "turn": 4,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "jobs",
+              "--run",
+              "run_3d71"
+            ]
+          },
+          "callId": "call_GZ78R3xz9QcX3xdUagPK7zQg"
+        },
+        {
+          "seq": 24,
+          "type": "tool_call",
+          "turn": 4,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "jobs",
+              "--run",
+              "run_b90c"
+            ]
+          },
+          "callId": "call_xrar6LpoURQfzvfZJlFMd7xY"
+        },
+        {
+          "seq": 25,
+          "type": "tool_result",
+          "turn": 4,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          },
+          "name": "run_ci_cli",
+          "callId": "call_EAg6kj0W34RmdDbsMz1Xrkrx",
+          "text": "ci-cli: unexpected argument 'jobs'. Run 'ci-cli --help' for usage.",
+          "chars": 66,
+          "isError": false
+        },
+        {
+          "seq": 26,
+          "type": "tool_result",
+          "turn": 4,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          },
+          "name": "run_ci_cli",
+          "callId": "call_GZ78R3xz9QcX3xdUagPK7zQg",
+          "text": "ci-cli: unexpected argument 'jobs'. Run 'ci-cli --help' for usage.",
+          "chars": 66,
+          "isError": false
+        },
+        {
+          "seq": 27,
+          "type": "tool_result",
+          "turn": 4,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          },
+          "name": "run_ci_cli",
+          "callId": "call_xrar6LpoURQfzvfZJlFMd7xY",
+          "text": "ci-cli: unexpected argument 'jobs'. Run 'ci-cli --help' for usage.",
+          "chars": 66,
+          "isError": false
+        },
+        {
+          "seq": 28,
+          "type": "turn_start",
+          "turn": 5,
+          "tokens": {
+            "input": 2089,
+            "output": 291,
+            "total": 2380
+          }
+        },
+        {
+          "seq": 29,
+          "type": "assistant_text",
+          "turn": 5,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          },
+          "text": ""
+        },
+        {
+          "seq": 30,
+          "type": "tool_call",
+          "turn": 5,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "jobs",
+              "--status",
+              "failed",
+              "--run",
+              "run_8f2a"
+            ]
+          },
+          "callId": "call_2UjHQQftJWMvKOwkVkeZzreF"
+        },
+        {
+          "seq": 31,
+          "type": "tool_call",
+          "turn": 5,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "jobs",
+              "--status",
+              "failed",
+              "--run",
+              "run_3d71"
+            ]
+          },
+          "callId": "call_EsHESXXJw516FYsRK4005DEE"
+        },
+        {
+          "seq": 32,
+          "type": "tool_call",
+          "turn": 5,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "jobs",
+              "--status",
+              "failed",
+              "--run",
+              "run_b90c"
+            ]
+          },
+          "callId": "call_r4cEqSQrHGCbhfHNsMt2f7oK"
+        },
+        {
+          "seq": 33,
+          "type": "tool_result",
+          "turn": 5,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          },
+          "name": "run_ci_cli",
+          "callId": "call_2UjHQQftJWMvKOwkVkeZzreF",
+          "text": "ci-cli: unexpected argument 'jobs'. Run 'ci-cli --help' for usage.",
+          "chars": 66,
+          "isError": false
+        },
+        {
+          "seq": 34,
+          "type": "tool_result",
+          "turn": 5,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          },
+          "name": "run_ci_cli",
+          "callId": "call_EsHESXXJw516FYsRK4005DEE",
+          "text": "ci-cli: unexpected argument 'jobs'. Run 'ci-cli --help' for usage.",
+          "chars": 66,
+          "isError": false
+        },
+        {
+          "seq": 35,
+          "type": "tool_result",
+          "turn": 5,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          },
+          "name": "run_ci_cli",
+          "callId": "call_r4cEqSQrHGCbhfHNsMt2f7oK",
+          "text": "ci-cli: unexpected argument 'jobs'. Run 'ci-cli --help' for usage.",
+          "chars": 66,
+          "isError": false
+        },
+        {
+          "seq": 36,
+          "type": "turn_start",
+          "turn": 6,
+          "tokens": {
+            "input": 3053,
+            "output": 403,
+            "total": 3456
+          }
+        },
+        {
+          "seq": 37,
+          "type": "assistant_text",
+          "turn": 6,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          },
+          "text": ""
+        },
+        {
+          "seq": 38,
+          "type": "tool_call",
+          "turn": 6,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "run_8f2a",
+              "--jobs"
+            ]
+          },
+          "callId": "call_7Q6q60j4Rgs3Qaf4b2Sno4g2"
+        },
+        {
+          "seq": 39,
+          "type": "tool_call",
+          "turn": 6,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "run_3d71",
+              "--jobs"
+            ]
+          },
+          "callId": "call_XV2ndRCh2HiIUmTbPyFeVEs4"
+        },
+        {
+          "seq": 40,
+          "type": "tool_call",
+          "turn": 6,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "run_b90c",
+              "--jobs"
+            ]
+          },
+          "callId": "call_ofE0AxuQmECEx2KcY7zVVjv6"
+        },
+        {
+          "seq": 41,
+          "type": "tool_result",
+          "turn": 6,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          },
+          "name": "run_ci_cli",
+          "callId": "call_7Q6q60j4Rgs3Qaf4b2Sno4g2",
+          "text": "ci-cli: unexpected argument 'run_8f2a'. Run 'ci-cli --help' for usage.",
+          "chars": 70,
+          "isError": false
+        },
+        {
+          "seq": 42,
+          "type": "tool_result",
+          "turn": 6,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          },
+          "name": "run_ci_cli",
+          "callId": "call_XV2ndRCh2HiIUmTbPyFeVEs4",
+          "text": "ci-cli: unexpected argument 'run_3d71'. Run 'ci-cli --help' for usage.",
+          "chars": 70,
+          "isError": false
+        },
+        {
+          "seq": 43,
+          "type": "tool_result",
+          "turn": 6,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          },
+          "name": "run_ci_cli",
+          "callId": "call_ofE0AxuQmECEx2KcY7zVVjv6",
+          "text": "ci-cli: unexpected argument 'run_b90c'. Run 'ci-cli --help' for usage.",
+          "chars": 70,
+          "isError": false
+        },
+        {
+          "seq": 44,
+          "type": "turn_start",
+          "turn": 7,
+          "tokens": {
+            "input": 4197,
+            "output": 494,
+            "total": 4691
+          }
+        },
+        {
+          "seq": 45,
+          "type": "assistant_text",
+          "turn": 7,
+          "tokens": {
+            "input": 5512,
+            "output": 518,
+            "total": 6030
+          },
+          "text": ""
+        },
+        {
+          "seq": 46,
+          "type": "tool_call",
+          "turn": 7,
+          "tokens": {
+            "input": 5512,
+            "output": 518,
+            "total": 6030
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "list",
+              "--status",
+              "failed",
+              "--jobs"
+            ]
+          },
+          "callId": "call_8mxw3T3OCQ9ncV8TZx3nTMo0"
+        },
+        {
+          "seq": 47,
+          "type": "tool_result",
+          "turn": 7,
+          "tokens": {
+            "input": 5512,
+            "output": 518,
+            "total": 6030
+          },
+          "name": "run_ci_cli",
+          "callId": "call_8mxw3T3OCQ9ncV8TZx3nTMo0",
+          "text": "ci-cli: unexpected argument '--jobs'. Run 'ci-cli --help' for usage.",
+          "chars": 68,
+          "isError": false
+        },
+        {
+          "seq": 48,
+          "type": "turn_start",
+          "turn": 8,
+          "tokens": {
+            "input": 5512,
+            "output": 518,
+            "total": 6030
+          }
+        },
+        {
+          "seq": 49,
+          "type": "assistant_text",
+          "turn": 8,
+          "tokens": {
+            "input": 6878,
+            "output": 535,
+            "total": 7413
+          },
+          "text": ""
+        },
+        {
+          "seq": 50,
+          "type": "tool_call",
+          "turn": 8,
+          "tokens": {
+            "input": 6878,
+            "output": 535,
+            "total": 7413
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "--help"
+            ]
+          },
+          "callId": "call_pSPoIZl4vd1cpMxUcyP5DtxK"
+        },
+        {
+          "seq": 51,
+          "type": "tool_result",
+          "turn": 8,
+          "tokens": {
+            "input": 6878,
+            "output": 535,
+            "total": 7413
+          },
+          "name": "run_ci_cli",
+          "callId": "call_pSPoIZl4vd1cpMxUcyP5DtxK",
+          "text": "ci-cli — inspect CI pipeline runs\n\nusage:\n  ci-cli list [--status <status>]   list run summaries\n  ci-cli get <id>                   full details for one run (jobs + logs)\n  ci-cli --help                     show this help\n",
+          "chars": 223,
+          "isError": false
+        },
+        {
+          "seq": 52,
+          "type": "turn_start",
+          "turn": 9,
+          "tokens": {
+            "input": 6878,
+            "output": 535,
+            "total": 7413
+          }
+        },
+        {
+          "seq": 53,
+          "type": "assistant_text",
+          "turn": 9,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          },
+          "text": ""
+        },
+        {
+          "seq": 54,
+          "type": "tool_call",
+          "turn": 9,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "get",
+              "run_8f2a"
+            ]
+          },
+          "callId": "call_Nnum1ZI9pYOyfhG5pVBwcpKE"
+        },
+        {
+          "seq": 55,
+          "type": "tool_call",
+          "turn": 9,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "get",
+              "run_3d71"
+            ]
+          },
+          "callId": "call_LNCx1Hk59BRMfDyHdAy62g3E"
+        },
+        {
+          "seq": 56,
+          "type": "tool_call",
+          "turn": 9,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          },
+          "name": "run_ci_cli",
+          "args": {
+            "args": [
+              "get",
+              "run_b90c"
+            ]
+          },
+          "callId": "call_q69dfkjHqwl5XWT1yNLeMk96"
+        },
+        {
+          "seq": 57,
+          "type": "tool_result",
+          "turn": 9,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          },
+          "name": "run_ci_cli",
+          "callId": "call_Nnum1ZI9pYOyfhG5pVBwcpKE",
+          "text": "{\n  \"id\": \"run_8f2a\",\n  \"status\": \"failed\",\n  \"branch\": \"feat/checkout-retry\",\n  \"commit\": {\n    \"sha\": \"a1b9c3d\",\n    \"message\": \"retry flaky checkout step\",\n    \"author\": \"priya\"\n  },\n  \"trigger\": \"push\",\n  \"duration_seconds\": 342,\n  \"created_at\": \"2026-07-13T09:21:04Z\",\n  \"jobs\": [\n    {\n      \"name\": \"lint\",\n      \"status\": \"success\",\n      \"duration\": 22\n    },\n    {\n      \"name\": \"unit\",\n      \"status\": \"success\",\n      \"duration\": 118\n    },\n    {\n      \"name\": \"e2e\",\n      \"status\": \"failed\",\n      \"duration\": 202\n    }\n  ],\n  \"logs\": \"› e2e: checkout.spec.ts › completes purchase with saved card\\n  ✓ loads cart (1204ms)\\n  ✓ applies promo code SAVE10 (842ms)\\n  ✗ submits payment and shows confirmation (30011ms)\\n\\n  TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\\n  Call log:\\n    - waiting for selector \\\"[data-test=order-confirmation]\\\" to be visible\\n    - selector resolved to hidden <div data-test=\\\"order-confirmation\\\">…</div>\\n    - waiting for element to be visible\\n\\n    at CheckoutPage.confirmOrder (e2e/pages/checkout.ts:88:23)\\n    at Object.<anonymous> (e2e/checkout.spec.ts:141:5)\\n\\n  Retry #1 of 2 …\\n  ✗ submits payment and shows confirmation (30008ms) — same TimeoutError\\n  Retry #2 of 2 …\\n  ✗ submits payment and shows confirmation (30014ms) — same TimeoutError\\n\\n  1 failed, 2 passed (3 total) in 91.4s\\n  Payment gateway sandbox returned 502 on 3/3 attempts — see network.har\\n  ::error::e2e job failed after 2 retries; flaky payment sandbox suspected\\nProcess completed with exit code 1.\"\n}\n",
+          "chars": 1551,
+          "isError": false
+        },
+        {
+          "seq": 58,
+          "type": "tool_result",
+          "turn": 9,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          },
+          "name": "run_ci_cli",
+          "callId": "call_LNCx1Hk59BRMfDyHdAy62g3E",
+          "text": "{\n  \"id\": \"run_3d71\",\n  \"status\": \"failed\",\n  \"branch\": \"fix/session-expiry\",\n  \"commit\": {\n    \"sha\": \"c4f0e21\",\n    \"message\": \"clear stale refresh token on 401\",\n    \"author\": \"marco\"\n  },\n  \"trigger\": \"pull_request\",\n  \"duration_seconds\": 176,\n  \"created_at\": \"2026-07-13T11:47:52Z\",\n  \"jobs\": [\n    {\n      \"name\": \"lint\",\n      \"status\": \"success\",\n      \"duration\": 19\n    },\n    {\n      \"name\": \"unit\",\n      \"status\": \"failed\",\n      \"duration\": 91\n    },\n    {\n      \"name\": \"e2e\",\n      \"status\": \"skipped\",\n      \"duration\": 0\n    }\n  ],\n  \"logs\": \"› unit: auth/session.test.ts\\n  ✓ issues access token on login (12ms)\\n  ✓ refreshes token before expiry (31ms)\\n  ✗ clears refresh token when server returns 401 (4ms)\\n\\n  AssertionError: expected refreshToken to be null\\n    expected: null\\n    received: \\\"rt_9a3f…c17\\\"\\n\\n    at Object.<anonymous> (auth/session.test.ts:64:38)\\n\\n  ✗ redirects to /login after refresh failure (2ms)\\n    AssertionError: expected location.pathname \\\"/dashboard\\\" to equal \\\"/login\\\"\\n    at Object.<anonymous> (auth/session.test.ts:79:42)\\n\\n  2 failed, 1 passed (3 total) in 0.71s\\n  Coverage: statements 78.2% (-1.4%), branches 71.0% (-2.1%)\\n  ::error::unit job failed: 2 assertions in auth/session.test.ts\\n  e2e job skipped because a required job (unit) failed.\\nProcess completed with exit code 1.\"\n}\n",
+          "chars": 1354,
+          "isError": false
+        },
+        {
+          "seq": 59,
+          "type": "tool_result",
+          "turn": 9,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          },
+          "name": "run_ci_cli",
+          "callId": "call_q69dfkjHqwl5XWT1yNLeMk96",
+          "text": "{\n  \"id\": \"run_b90c\",\n  \"status\": \"failed\",\n  \"branch\": \"chore/bump-node-24\",\n  \"commit\": {\n    \"sha\": \"e77aa08\",\n    \"message\": \"upgrade CI image to node 24\",\n    \"author\": \"sam\"\n  },\n  \"trigger\": \"push\",\n  \"duration_seconds\": 58,\n  \"created_at\": \"2026-07-13T14:02:19Z\",\n  \"jobs\": [\n    {\n      \"name\": \"lint\",\n      \"status\": \"failed\",\n      \"duration\": 41\n    },\n    {\n      \"name\": \"unit\",\n      \"status\": \"cancelled\",\n      \"duration\": 0\n    },\n    {\n      \"name\": \"e2e\",\n      \"status\": \"cancelled\",\n      \"duration\": 0\n    }\n  ],\n  \"logs\": \"Setting up job: build (node 24.10.0)\\n  ✓ actions/checkout@v4\\n  ✓ actions/setup-node@v4 (node 24.10.0)\\n  › pnpm install --frozen-lockfile\\n    Lockfile is up to date, resolution step is skipped\\n    Packages: +812\\n    Done in 9.2s\\n  › pnpm run lint\\n    eslint . --max-warnings=0\\n\\n    /app/src/util/parseDate.ts\\n      14:7  error  'Intl.DateTimeFormat' assertion is unnecessary  @typescript-eslint/no-unnecessary-type-assertion\\n      27:1  error  Unexpected console statement  no-console\\n\\n    /app/src/util/format.ts\\n      9:12  error  'padStart' is possibly undefined under node 24 lib update  @typescript-eslint/no-unsafe-call\\n\\n    ✖ 3 problems (3 errors, 0 warnings)\\n\\n  ::error::lint job failed with 3 eslint errors\\n  Cancelling dependent jobs: unit, e2e\\nProcess completed with exit code 1.\"\n}\n",
+          "chars": 1362,
+          "isError": false
+        },
+        {
+          "seq": 60,
+          "type": "turn_start",
+          "turn": 10,
+          "tokens": {
+            "input": 8323,
+            "output": 617,
+            "total": 8940
+          }
+        },
+        {
+          "seq": 61,
+          "type": "final",
+          "turn": 10,
+          "tokens": {
+            "input": 11091,
+            "output": 794,
+            "total": 11885
+          },
+          "text": "Here is the summary of failing pipeline runs:\n\n1. **Run ID**: run_8f2a\n   - **Failing Job**: e2e\n   - **Classification**: Flaky/Infrasrtructure Issue (due to network issues and a timeout)\n\n2. **Run ID**: run_3d71\n   - **Failing Job**: unit\n   - **Classification**: Real Code Regression (failed assertions in unit tests)\n\n3. **Run ID**: run_b90c\n   - **Failing Job**: lint\n   - **Classification**: Real Code Regression (eslint errors in code)\n\nSummary: \n- run_8f2a: e2e (flaky/infrastructure)\n- run_3d71: unit (real regression)\n- run_b90c: lint (real regression)"
+        }
+      ],
+      "totals": {
+        "turns": 10,
+        "input": 11091,
+        "output": 794,
+        "total": 11885,
+        "cost": 0.00214005,
+        "toolCalls": 21
+      }
+    },
+    {
+      "label": "MCP",
+      "toolCatalog": [
+        {
+          "name": "list_runs",
+          "description": "List CI/CD pipeline runs, most recent first. Supports optional filtering by run status, source branch, and a maximum number of results. Returns an array of lightweight run SUMMARIES (id, status, branch, trigger, duration, created_at, and a one-line job rollup) — NOT the logs or full job details. Call this first to discover run ids, then use get_run, list_jobs, get_logs, or search_logs to inspect a specific run."
+        },
+        {
+          "name": "get_run",
+          "description": "Fetch one pipeline run by its id and return the complete run object, including status, branch, commit {sha, message, author}, trigger, total duration in seconds, creation timestamp, the full jobs[] array, and the entire captured log tail. Use this when you already know the run id and want every field for that run."
+        },
+        {
+          "name": "list_jobs",
+          "description": "List the individual jobs that make up a single pipeline run. Returns the run's jobs[] array, where each job carries its name (e.g. 'lint', 'unit', 'e2e'), its status, and its duration in seconds. Use this to see which specific stage of a run passed, failed, was skipped, or is still pending."
+        },
+        {
+          "name": "get_logs",
+          "description": "Retrieve the captured console log tail for a single pipeline run. By default the entire stored log is returned; pass tail_lines to return only the last N lines, which is the usual way to inspect a failure without pulling the whole buffer into context."
+        },
+        {
+          "name": "retry_run",
+          "description": "Request a retry of a pipeline run. By default the entire run is re-queued from the start; set only_failed_jobs to re-run just the jobs that did not succeed. This is an offline demo, so no state is mutated on disk — the tool returns a plausible acknowledgement describing the retry that would have been enqueued."
+        },
+        {
+          "name": "cancel_run",
+          "description": "Request cancellation of a pipeline run that is currently in progress. An optional human-readable reason can be attached for the audit trail. This is an offline demo, so no state is mutated on disk — the tool returns a plausible acknowledgement describing the cancellation that would have been issued."
+        },
+        {
+          "name": "search_logs",
+          "description": "Search the captured log tail of a single run for a substring or regular expression, returning only the matching lines (with optional surrounding context). Use this to locate a specific error, assertion, or stack frame without pulling the entire log buffer into context."
+        },
+        {
+          "name": "get_job_logs",
+          "description": "Retrieve the log output scoped to a single named job (e.g. 'lint', 'unit', 'e2e') within a run, rather than the whole-run buffer. Use when you already know which job failed and want just that job's output."
+        },
+        {
+          "name": "get_run_annotations",
+          "description": "Return the structured error/warning annotations extracted from a run's logs (the '::error::' / '::warning::' markers CI emits), each with its message. A compact way to see what a run flagged without reading the full log tail."
+        },
+        {
+          "name": "rerun_failed_jobs",
+          "description": "Re-run only the failed jobs of a pipeline run, leaving successful jobs untouched. Offline demo — returns a plausible acknowledgement; no state is mutated on disk."
+        },
+        {
+          "name": "list_artifacts",
+          "description": "List the build artifacts produced by a run — name, size in bytes, content type, and an expiry timestamp. Artifacts are things like coverage reports, export samples, and captured HAR files. Use before download_artifact."
+        },
+        {
+          "name": "get_artifact_metadata",
+          "description": "Fetch metadata for a single artifact by id: name, byte size, content type, sha256 digest, and expiry. Does not download the bytes — use download_artifact for that."
+        },
+        {
+          "name": "download_artifact",
+          "description": "Request a time-limited download URL for a run artifact. Offline demo — returns a plausible signed-URL acknowledgement rather than bytes."
+        },
+        {
+          "name": "list_workflows",
+          "description": "List the CI/CD workflows defined for the repository — id, name, the file that defines them, and their enabled state. Workflows are the pipelines that runs are instances of."
+        },
+        {
+          "name": "get_workflow",
+          "description": "Fetch a single workflow by id, including its name, defining file, triggers, and enabled state."
+        },
+        {
+          "name": "trigger_workflow",
+          "description": "Manually trigger a workflow run on a given git ref, optionally passing workflow inputs. Offline demo — returns an acknowledgement describing the run that would have been enqueued."
+        },
+        {
+          "name": "list_branches",
+          "description": "List the git branches that have at least one pipeline run, with the id and status of their most recent run. Useful for finding which branches are currently red."
+        },
+        {
+          "name": "get_pipeline_metrics",
+          "description": "Return aggregate pipeline health metrics over all known runs: total runs, counts by status, pass rate, and average run duration in seconds. A dashboard-style summary computed server-side."
+        },
+        {
+          "name": "list_pull_request_checks",
+          "description": "List the CI checks associated with a pull request number, deriving them from runs triggered by that PR. Returns each run's id, branch, and status."
+        },
+        {
+          "name": "list_deployments",
+          "description": "List recent deployments across environments — id, environment, the run that produced them, version, and state (queued, in_progress, active, failed). Offline demo — deployments are synthesized from the run history."
+        },
+        {
+          "name": "approve_deployment",
+          "description": "Approve a deployment that is waiting on a required review gate. Offline demo — returns an acknowledgement rather than mutating state."
+        }
+      ],
+      "events": [
+        {
+          "seq": 0,
+          "type": "turn_start",
+          "turn": 1,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "total": 0
+          }
+        },
+        {
+          "seq": 1,
+          "type": "assistant_text",
+          "turn": 1,
+          "tokens": {
+            "input": 2188,
+            "output": 14,
+            "total": 2202
+          },
+          "text": ""
+        },
+        {
+          "seq": 2,
+          "type": "tool_call",
+          "turn": 1,
+          "tokens": {
+            "input": 2188,
+            "output": 14,
+            "total": 2202
+          },
+          "name": "list_runs",
+          "args": {
+            "status": "failed"
+          },
+          "callId": "call_6cFRUtq1cCwVa2TRIyui81Mx"
+        },
+        {
+          "seq": 3,
+          "type": "tool_result",
+          "turn": 1,
+          "tokens": {
+            "input": 2188,
+            "output": 14,
+            "total": 2202
+          },
+          "name": "list_runs",
+          "callId": "call_6cFRUtq1cCwVa2TRIyui81Mx",
+          "text": "[{\"id\":\"run_8f2a\",\"status\":\"failed\",\"branch\":\"feat/checkout-retry\",\"trigger\":\"push\",\"duration_seconds\":342,\"created_at\":\"2026-07-13T09:21:04Z\",\"jobs\":\"3 jobs · 2 ok · 1 failed\"},{\"id\":\"run_3d71\",\"status\":\"failed\",\"branch\":\"fix/session-expiry\",\"trigger\":\"pull_request\",\"duration_seconds\":176,\"created_at\":\"2026-07-13T11:47:52Z\",\"jobs\":\"3 jobs · 1 ok · 1 failed · 1 other\"},{\"id\":\"run_b90c\",\"status\":\"failed\",\"branch\":\"chore/bump-node-24\",\"trigger\":\"push\",\"duration_seconds\":58,\"created_at\":\"2026-07-13T14:02:19Z\",\"jobs\":\"3 jobs · 0 ok · 1 failed · 2 other\"}]",
+          "chars": 557,
+          "isError": false
+        },
+        {
+          "seq": 4,
+          "type": "turn_start",
+          "turn": 2,
+          "tokens": {
+            "input": 2188,
+            "output": 14,
+            "total": 2202
+          }
+        },
+        {
+          "seq": 5,
+          "type": "assistant_text",
+          "turn": 2,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          },
+          "text": ""
+        },
+        {
+          "seq": 6,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          },
+          "name": "list_jobs",
+          "args": {
+            "run_id": "run_8f2a"
+          },
+          "callId": "call_Dd5sQ0UqqBueixcgZ70ZKrzj"
+        },
+        {
+          "seq": 7,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          },
+          "name": "list_jobs",
+          "args": {
+            "run_id": "run_3d71"
+          },
+          "callId": "call_5gaKygGUTLfcwfRcmJwkypVN"
+        },
+        {
+          "seq": 8,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          },
+          "name": "list_jobs",
+          "args": {
+            "run_id": "run_b90c"
+          },
+          "callId": "call_W1x3NAYtVcDrHfLG349Y7MRG"
+        },
+        {
+          "seq": 9,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          },
+          "name": "list_jobs",
+          "callId": "call_Dd5sQ0UqqBueixcgZ70ZKrzj",
+          "text": "[{\"name\":\"lint\",\"status\":\"success\",\"duration\":22},{\"name\":\"unit\",\"status\":\"success\",\"duration\":118},{\"name\":\"e2e\",\"status\":\"failed\",\"duration\":202}]",
+          "chars": 148,
+          "isError": false
+        },
+        {
+          "seq": 10,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          },
+          "name": "list_jobs",
+          "callId": "call_5gaKygGUTLfcwfRcmJwkypVN",
+          "text": "[{\"name\":\"lint\",\"status\":\"success\",\"duration\":19},{\"name\":\"unit\",\"status\":\"failed\",\"duration\":91},{\"name\":\"e2e\",\"status\":\"skipped\",\"duration\":0}]",
+          "chars": 145,
+          "isError": false
+        },
+        {
+          "seq": 11,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          },
+          "name": "list_jobs",
+          "callId": "call_W1x3NAYtVcDrHfLG349Y7MRG",
+          "text": "[{\"name\":\"lint\",\"status\":\"failed\",\"duration\":41},{\"name\":\"unit\",\"status\":\"cancelled\",\"duration\":0},{\"name\":\"e2e\",\"status\":\"cancelled\",\"duration\":0}]",
+          "chars": 148,
+          "isError": false
+        },
+        {
+          "seq": 12,
+          "type": "turn_start",
+          "turn": 3,
+          "tokens": {
+            "input": 4588,
+            "output": 87,
+            "total": 4675
+          }
+        },
+        {
+          "seq": 13,
+          "type": "assistant_text",
+          "turn": 3,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          },
+          "text": ""
+        },
+        {
+          "seq": 14,
+          "type": "tool_call",
+          "turn": 3,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          },
+          "name": "get_logs",
+          "args": {
+            "run_id": "run_8f2a",
+            "tail_lines": 50
+          },
+          "callId": "call_Nbus5ma6RXX5elIyaNQu3y42"
+        },
+        {
+          "seq": 15,
+          "type": "tool_call",
+          "turn": 3,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          },
+          "name": "get_logs",
+          "args": {
+            "run_id": "run_3d71",
+            "tail_lines": 50
+          },
+          "callId": "call_88tDOoJxHbpQGdQJjn416IA4"
+        },
+        {
+          "seq": 16,
+          "type": "tool_call",
+          "turn": 3,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          },
+          "name": "get_logs",
+          "args": {
+            "run_id": "run_b90c",
+            "tail_lines": 50
+          },
+          "callId": "call_w4yZAGsOtbcraXMtFLDQzmdT"
+        },
+        {
+          "seq": 17,
+          "type": "tool_result",
+          "turn": 3,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          },
+          "name": "get_logs",
+          "callId": "call_Nbus5ma6RXX5elIyaNQu3y42",
+          "text": "{\"run_id\":\"run_8f2a\",\"logs\":\"› e2e: checkout.spec.ts › completes purchase with saved card\\n  ✓ loads cart (1204ms)\\n  ✓ applies promo code SAVE10 (842ms)\\n  ✗ submits payment and shows confirmation (30011ms)\\n\\n  TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\\n  Call log:\\n    - waiting for selector \\\"[data-test=order-confirmation]\\\" to be visible\\n    - selector resolved to hidden <div data-test=\\\"order-confirmation\\\">…</div>\\n    - waiting for element to be visible\\n\\n    at CheckoutPage.confirmOrder (e2e/pages/checkout.ts:88:23)\\n    at Object.<anonymous> (e2e/checkout.spec.ts:141:5)\\n\\n  Retry #1 of 2 …\\n  ✗ submits payment and shows confirmation (30008ms) — same TimeoutError\\n  Retry #2 of 2 …\\n  ✗ submits payment and shows confirmation (30014ms) — same TimeoutError\\n\\n  1 failed, 2 passed (3 total) in 91.4s\\n  Payment gateway sandbox returned 502 on 3/3 attempts — see network.har\\n  ::error::e2e job failed after 2 retries; flaky payment sandbox suspected\\nProcess completed with exit code 1.\"}",
+          "chars": 1028,
+          "isError": false
+        },
+        {
+          "seq": 18,
+          "type": "tool_result",
+          "turn": 3,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          },
+          "name": "get_logs",
+          "callId": "call_88tDOoJxHbpQGdQJjn416IA4",
+          "text": "{\"run_id\":\"run_3d71\",\"logs\":\"› unit: auth/session.test.ts\\n  ✓ issues access token on login (12ms)\\n  ✓ refreshes token before expiry (31ms)\\n  ✗ clears refresh token when server returns 401 (4ms)\\n\\n  AssertionError: expected refreshToken to be null\\n    expected: null\\n    received: \\\"rt_9a3f…c17\\\"\\n\\n    at Object.<anonymous> (auth/session.test.ts:64:38)\\n\\n  ✗ redirects to /login after refresh failure (2ms)\\n    AssertionError: expected location.pathname \\\"/dashboard\\\" to equal \\\"/login\\\"\\n    at Object.<anonymous> (auth/session.test.ts:79:42)\\n\\n  2 failed, 1 passed (3 total) in 0.71s\\n  Coverage: statements 78.2% (-1.4%), branches 71.0% (-2.1%)\\n  ::error::unit job failed: 2 assertions in auth/session.test.ts\\n  e2e job skipped because a required job (unit) failed.\\nProcess completed with exit code 1.\"}",
+          "chars": 820,
+          "isError": false
+        },
+        {
+          "seq": 19,
+          "type": "tool_result",
+          "turn": 3,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          },
+          "name": "get_logs",
+          "callId": "call_w4yZAGsOtbcraXMtFLDQzmdT",
+          "text": "{\"run_id\":\"run_b90c\",\"logs\":\"Setting up job: build (node 24.10.0)\\n  ✓ actions/checkout@v4\\n  ✓ actions/setup-node@v4 (node 24.10.0)\\n  › pnpm install --frozen-lockfile\\n    Lockfile is up to date, resolution step is skipped\\n    Packages: +812\\n    Done in 9.2s\\n  › pnpm run lint\\n    eslint . --max-warnings=0\\n\\n    /app/src/util/parseDate.ts\\n      14:7  error  'Intl.DateTimeFormat' assertion is unnecessary  @typescript-eslint/no-unnecessary-type-assertion\\n      27:1  error  Unexpected console statement  no-console\\n\\n    /app/src/util/format.ts\\n      9:12  error  'padStart' is possibly undefined under node 24 lib update  @typescript-eslint/no-unsafe-call\\n\\n    ✖ 3 problems (3 errors, 0 warnings)\\n\\n  ::error::lint job failed with 3 eslint errors\\n  Cancelling dependent jobs: unit, e2e\\nProcess completed with exit code 1.\"}",
+          "chars": 841,
+          "isError": false
+        },
+        {
+          "seq": 20,
+          "type": "turn_start",
+          "turn": 4,
+          "tokens": {
+            "input": 7244,
+            "output": 175,
+            "total": 7419
+          }
+        },
+        {
+          "seq": 21,
+          "type": "final",
+          "turn": 4,
+          "tokens": {
+            "input": 10812,
+            "output": 346,
+            "total": 11158
+          },
+          "text": "Here's the summary of each failing pipeline run, including the failed job and classification of the failure:\n\n1. **Run ID:** `run_8f2a`\n   - **Failed Job:** `e2e`\n   - **Classification:** Flaky/infrastructure issue (TimeoutError with the payment gateway sandbox, suspected to be flaky).\n\n2. **Run ID:** `run_3d71`\n   - **Failed Job:** `unit`\n   - **Classification:** Real code regression (Assertion errors in the tests indicate failures in expected logic).\n\n3. **Run ID:** `run_b90c`\n   - **Failed Job:** `lint`\n   - **Classification:** Real code regression (Linting errors indicate issues with code quality that need to be addressed).\n\nThis classification is based on detailed log outputs and the nature of the errors encountered."
+        }
+      ],
+      "totals": {
+        "turns": 4,
+        "input": 10812,
+        "output": 346,
+        "total": 11158,
+        "cost": 0.0018294000000000001,
+        "toolCalls": 7
+      }
+    },
+    {
+      "label": "AXI",
+      "toolCatalog": [
+        {
+          "name": "run_ci",
+          "description": "Run the `ci` command-line tool and return its output. Pass the arguments as an array of strings, e.g. [\"list\",\"--status\",\"failed\"]. Pass [\"--help\"] to discover its available subcommands."
+        }
+      ],
+      "events": [
+        {
+          "seq": 0,
+          "type": "turn_start",
+          "turn": 1,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "total": 0
+          }
+        },
+        {
+          "seq": 1,
+          "type": "assistant_text",
+          "turn": 1,
+          "tokens": {
+            "input": 181,
+            "output": 20,
+            "total": 201
+          },
+          "text": ""
+        },
+        {
+          "seq": 2,
+          "type": "tool_call",
+          "turn": 1,
+          "tokens": {
+            "input": 181,
+            "output": 20,
+            "total": 201
+          },
+          "name": "run_ci",
+          "args": {
+            "args": [
+              "list",
+              "--status",
+              "failed"
+            ]
+          },
+          "callId": "call_dBZb89NcOgCWp12urGD8LajA"
+        },
+        {
+          "seq": 3,
+          "type": "tool_result",
+          "turn": 1,
+          "tokens": {
+            "input": 181,
+            "output": 20,
+            "total": 201
+          },
+          "name": "run_ci",
+          "callId": "call_dBZb89NcOgCWp12urGD8LajA",
+          "text": "summary: 8 runs · 3 failed · 2 running · 3 passed\nruns[3]{id,status,branch,logs}:\n  run_8f2a,failed,feat/checkout-retry,\"› e2e: checkout.spec.ts › completes purchase with saved card\\n  ✓ loads cart (1204ms)\\n  ✓ applies promo code SAVE10 (842m…(971 chars, use --full)\"\n  run_3d71,failed,fix/session-expiry,\"› unit: auth/session.test.ts\\n  ✓ issues access token on login (12ms)\\n  ✓ refreshes token before expiry (31ms)\\n  ✗ clears…(764 chars, use --full)\"\n  run_b90c,failed,chore/bump-node-24,\"Setting up job: build (node 24.10.0)\\n  ✓ actions/checkout@v4\\n  ✓ actions/setup-node@v4 (node 24.10.0)\\n  › pnpm install -…(789 chars, use --full)\"\nnext: ci get <id> --full   # for full logs\n",
+          "chars": 686,
+          "isError": false
+        },
+        {
+          "seq": 4,
+          "type": "turn_start",
+          "turn": 2,
+          "tokens": {
+            "input": 181,
+            "output": 20,
+            "total": 201
+          }
+        },
+        {
+          "seq": 5,
+          "type": "assistant_text",
+          "turn": 2,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          },
+          "text": ""
+        },
+        {
+          "seq": 6,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          },
+          "name": "run_ci",
+          "args": {
+            "args": [
+              "get",
+              "run_8f2a",
+              "--full"
+            ]
+          },
+          "callId": "call_4OdFDWCwH4DVnbrJUPQMb29J"
+        },
+        {
+          "seq": 7,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          },
+          "name": "run_ci",
+          "args": {
+            "args": [
+              "get",
+              "run_3d71",
+              "--full"
+            ]
+          },
+          "callId": "call_rGjFgreaxw0lFkyPg48xF6hg"
+        },
+        {
+          "seq": 8,
+          "type": "tool_call",
+          "turn": 2,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          },
+          "name": "run_ci",
+          "args": {
+            "args": [
+              "get",
+              "run_b90c",
+              "--full"
+            ]
+          },
+          "callId": "call_3WvFTak2ynmR2g3NfJ20Kht4"
+        },
+        {
+          "seq": 9,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          },
+          "name": "run_ci",
+          "callId": "call_4OdFDWCwH4DVnbrJUPQMb29J",
+          "text": "summary: run_8f2a · failed · 1 failing\nrun:\n  id: run_8f2a\n  status: failed\n  branch: feat/checkout-retry\n  failing_jobs: e2e\n  logs: \"› e2e: checkout.spec.ts › completes purchase with saved card\\n  ✓ loads cart (1204ms)\\n  ✓ applies promo code SAVE10 (842ms)\\n  ✗ submits payment and shows confirmation (30011ms)\\n\\n  TimeoutError: page.waitForSelector: Timeout 30000ms exceeded.\\n  Call log:\\n    - waiting for selector \\\"[data-test=order-confirmation]\\\" to be visible\\n    - selector resolved to hidden <div data-test=\\\"order-confirmation\\\">…</div>\\n    - waiting for element to be visible\\n\\n    at CheckoutPage.confirmOrder (e2e/pages/checkout.ts:88:23)\\n    at Object.<anonymous> (e2e/checkout.spec.ts:141:5)\\n\\n  Retry #1 of 2 …\\n  ✗ submits payment and shows confirmation (30008ms) — same TimeoutError\\n  Retry #2 of 2 …\\n  ✗ submits payment and shows confirmation (30014ms) — same TimeoutError\\n\\n  1 failed, 2 passed (3 total) in 91.4s\\n  Payment gateway sandbox returned 502 on 3/3 attempts — see network.har\\n  ::error::e2e job failed after 2 retries; flaky payment sandbox suspected\\nProcess completed with exit code 1.\"\nnext: ci get <id> --full   # for the full log tail\n",
+          "chars": 1185,
+          "isError": false
+        },
+        {
+          "seq": 10,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          },
+          "name": "run_ci",
+          "callId": "call_rGjFgreaxw0lFkyPg48xF6hg",
+          "text": "summary: run_3d71 · failed · 1 failing\nrun:\n  id: run_3d71\n  status: failed\n  branch: fix/session-expiry\n  failing_jobs: unit\n  logs: \"› unit: auth/session.test.ts\\n  ✓ issues access token on login (12ms)\\n  ✓ refreshes token before expiry (31ms)\\n  ✗ clears refresh token when server returns 401 (4ms)\\n\\n  AssertionError: expected refreshToken to be null\\n    expected: null\\n    received: \\\"rt_9a3f…c17\\\"\\n\\n    at Object.<anonymous> (auth/session.test.ts:64:38)\\n\\n  ✗ redirects to /login after refresh failure (2ms)\\n    AssertionError: expected location.pathname \\\"/dashboard\\\" to equal \\\"/login\\\"\\n    at Object.<anonymous> (auth/session.test.ts:79:42)\\n\\n  2 failed, 1 passed (3 total) in 0.71s\\n  Coverage: statements 78.2% (-1.4%), branches 71.0% (-2.1%)\\n  ::error::unit job failed: 2 assertions in auth/session.test.ts\\n  e2e job skipped because a required job (unit) failed.\\nProcess completed with exit code 1.\"\nnext: ci get <id> --full   # for the full log tail\n",
+          "chars": 977,
+          "isError": false
+        },
+        {
+          "seq": 11,
+          "type": "tool_result",
+          "turn": 2,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          },
+          "name": "run_ci",
+          "callId": "call_3WvFTak2ynmR2g3NfJ20Kht4",
+          "text": "summary: run_b90c · failed · 1 failing\nrun:\n  id: run_b90c\n  status: failed\n  branch: chore/bump-node-24\n  failing_jobs: lint\n  logs: \"Setting up job: build (node 24.10.0)\\n  ✓ actions/checkout@v4\\n  ✓ actions/setup-node@v4 (node 24.10.0)\\n  › pnpm install --frozen-lockfile\\n    Lockfile is up to date, resolution step is skipped\\n    Packages: +812\\n    Done in 9.2s\\n  › pnpm run lint\\n    eslint . --max-warnings=0\\n\\n    /app/src/util/parseDate.ts\\n      14:7  error  'Intl.DateTimeFormat' assertion is unnecessary  @typescript-eslint/no-unnecessary-type-assertion\\n      27:1  error  Unexpected console statement  no-console\\n\\n    /app/src/util/format.ts\\n      9:12  error  'padStart' is possibly undefined under node 24 lib update  @typescript-eslint/no-unsafe-call\\n\\n    ✖ 3 problems (3 errors, 0 warnings)\\n\\n  ::error::lint job failed with 3 eslint errors\\n  Cancelling dependent jobs: unit, e2e\\nProcess completed with exit code 1.\"\nnext: ci get <id> --full   # for the full log tail\n",
+          "chars": 998,
+          "isError": false
+        },
+        {
+          "seq": 12,
+          "type": "turn_start",
+          "turn": 3,
+          "tokens": {
+            "input": 626,
+            "output": 108,
+            "total": 734
+          }
+        },
+        {
+          "seq": 13,
+          "type": "final",
+          "turn": 3,
+          "tokens": {
+            "input": 2217,
+            "output": 281,
+            "total": 2498
+          },
+          "text": "Here are the details for the failed pipeline runs:\n\n1. **Run ID:** `run_8f2a`\n   - **Failing Job:** `e2e`\n   - **Classification:** Flaky/Infrastructure issue (Timeout on a payment gateway sandbox resulting in failures during retries).\n\n2. **Run ID:** `run_3d71`\n   - **Failing Job:** `unit`\n   - **Classification:** Real code regression (Assertions failed due to unexpected state in the code).\n\n3. **Run ID:** `run_b90c`\n   - **Failing Job:** `lint`\n   - **Classification:** Real code regression (ESLint errors indicating code issues).\n\nIn summary:\n- **Flaky/Infrastructure:** run_8f2a\n- **Real Code Regression:** run_3d71, run_b90c"
+        }
+      ],
+      "totals": {
+        "turns": 3,
+        "input": 2217,
+        "output": 281,
+        "total": 2498,
+        "cost": 0.00050115,
+        "toolCalls": 4
+      }
+    }
+  ]
+}

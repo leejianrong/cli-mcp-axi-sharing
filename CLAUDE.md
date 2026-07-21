@@ -104,13 +104,22 @@ commit{sha,message,author}, trigger, duration_seconds, created_at, jobs[], logs`
 
 Two measured tasks: the **tokenizer diff** uses the single call "list failing
 runs" (`--status failed` → `run_8f2a, run_3d71, run_b90c`); the **agent run**
-uses the multi-step "classify each failing run" task (`ci failures`).
+uses the multi-step "classify each failing run" task. For a fair comparison every
+interface takes the same **list + get-per-run** path (CLI `list`→`get`, MCP
+`list_runs`→`get_run`/`get_logs`, AXI `ci list`→`ci get`); the one-call
+`ci failures` is showcased separately as the AXI affordance payoff, not the
+measured harness path.
 
 ## What each interface must be
 
 - **CLI (`src/cli.ts`, bin `ci-cli`)** — `list --status failed` prints
-  `JSON.stringify(runs, null, 2)` of the full objects. Deliberately verbose: no
-  summary line, no next-step hint. This is the human-shaped baseline.
+  `JSON.stringify(..., null, 2)` of a **summary projection** (same list-endpoint
+  shape as MCP/AXI — no inline logs, jobs as a rollup string), so classifying a
+  failure requires drilling in via `ci-cli get <id>`. Deliberately verbose *in
+  format* (pretty JSON, no summary line, no next-step hint) — the human-shaped
+  baseline. Handles errors honestly: `--help` to stdout; unknown command / bad id
+  / stray args → message to stderr + exit 1 + a "run --help" pointer (no silent
+  fallback dump).
 - **MCP (`src/mcp-server.ts`, bin `ci-mcp`)** — a stdio `@modelcontextprotocol/sdk`
   server exposing a realistic **~21-tool** CI surface (runs, jobs, logs, search,
   annotations, artifacts, workflows, branches, metrics, deployments, …), each
@@ -118,14 +127,19 @@ uses the multi-step "classify each failing run" task (`ci failures`).
   `list_runs` returns lightweight **summaries** (no logs) — real list-endpoint
   behavior — so classifying a failure requires drilling in (extra turns).
   Exports `callTool(name, args)` so `agent-run.mjs` can dispatch in-process.
-- **AXI (`src/axi.ts`, bin `ci`)** — the finished command, two subcommands:
+- **AXI (`src/axi.ts`, bin `ci`)** — the finished command. `ci --help` lists the
+  subcommands:
   - `ci list [--status] [--full]` — implements four principles exactly as
     `docs/live_demo_script.md` §0 shows: P1 TOON via `renderOutput`, P2 minimal
     4-field schema, P4 a pre-computed `summary` line, P3 `truncate` + `--full`.
     Plus a definitive empty state and a `next` hint. Keep it line-for-line
     consistent with the slide-8b snippets — if they drift, fix one.
+  - `ci get <id> [--full]` — the drill-down for one run (the fair counterpart to
+    `ci-cli get` / MCP's `get_run`), so the list+get path is consistent across all
+    three interfaces.
   - `ci failures` — answers the multi-step task in ONE compact call: each failing
     run's failing job(s) + a flaky-vs-regression verdict (P4 taken to its end).
+    This is the AXI *affordance payoff* beat, separate from the fair list+get path.
 
 ## Conventions
 

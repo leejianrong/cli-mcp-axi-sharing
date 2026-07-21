@@ -20,7 +20,9 @@
     "axi": "node dist/axi.js",
     "capture": "node scripts/capture.mjs",
     "token-diff": "node scripts/token-diff.mjs",
-    "agent-run": "node --env-file-if-exists=.env scripts/agent-run.mjs"
+    "agent-run": "node --env-file-if-exists=.env scripts/agent-run.mjs",
+    "validate-recording": "node scripts/validate-recording.mjs",
+    "viz": "node ../viz/serve.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.19.1",

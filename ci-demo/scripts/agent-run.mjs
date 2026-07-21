@@ -89,6 +89,10 @@ function getFlag(name) {
 
 const REPEATS = Number(getFlag("--repeats") ?? "1") || 1;
 
+// Opt-in per-event recording (openai / anthropic-api only — they loop in-process).
+const RECORD = process.argv.includes("--record");
+const RECORD_OUT = getFlag("--record-out"); // optional output-path override
+
 /**
  * Prices in USD per 1M tokens. `claude-sonnet-5` has intro pricing ($2/$10)
  * through 2026-08-31. gpt-4o-mini rates are approximate — confirm with OpenAI
@@ -120,10 +124,16 @@ function runNode(entry, args) {
     encoding: "utf8",
     maxBuffer: 32 * 1024 * 1024,
   });
-  if (res.status !== 0 && !res.stdout) {
-    throw new Error((res.stderr || res.error?.message || "command failed").trim());
+  const out = res.stdout ?? "";
+  const err = res.stderr ?? "";
+  // On a non-zero exit, surface the real error text (usage/stderr) to the agent
+  // so it can react the way a human would — retry, run --help, pick a valid
+  // command — instead of being blind to the failure.
+  if (res.status !== 0) {
+    const msg = (out + (out && err ? "\n" : "") + err).trim() || res.error?.message || "command failed";
+    return msg.slice(0, MAX_TOOL_OUTPUT);
   }
-  return (res.stdout ?? "").slice(0, MAX_TOOL_OUTPUT);
+  return out.slice(0, MAX_TOOL_OUTPUT);
 }
 
 /** One thin "run this CLI" tool — the entire interface surface for CLI/AXI. */
@@ -131,8 +141,9 @@ function shellTool(name, bin, example) {
   return {
     name,
     description:
-      `Run the \`${bin}\` command-line tool and return its stdout. Pass the ` +
-      `arguments as an array of strings, e.g. ${JSON.stringify(example)}.`,
+      `Run the \`${bin}\` command-line tool and return its output. Pass the ` +
+      `arguments as an array of strings, e.g. ${JSON.stringify(example)}. ` +
+      `Pass ["--help"] to discover its available subcommands.`,
     parameters: {
       type: "object",
       additionalProperties: false,
@@ -158,7 +169,7 @@ function conditions() {
       tools: [shellTool("run_ci_cli", "ci-cli", ["list", "--status", "failed"])],
       exec: (name, input) => runNode(CLI_ENTRY, input.args ?? []),
       // CLI-provider realization: shell out to ci-cli via the Bash tool.
-      cli: { kind: "shell", bin: "cli.js", hint: "Use the Bash tool to run `node dist/cli.js` (e.g. `node dist/cli.js list --status failed`)." },
+      cli: { kind: "shell", bin: "cli.js", hint: "Use the Bash tool to run `node dist/cli.js`. `node dist/cli.js list --status failed` lists run summaries; `node dist/cli.js get <id>` returns one run's full details (jobs + logs)." },
     },
     {
       label: "MCP",
@@ -168,9 +179,9 @@ function conditions() {
     },
     {
       label: "AXI",
-      tools: [shellTool("run_ci", "ci", ["failures"])],
+      tools: [shellTool("run_ci", "ci", ["list", "--status", "failed"])],
       exec: (name, input) => runNode(AXI_ENTRY, input.args ?? []),
-      cli: { kind: "shell", bin: "axi.js", hint: "Use the Bash tool to run `node dist/axi.js` (e.g. `node dist/axi.js failures`)." },
+      cli: { kind: "shell", bin: "axi.js", hint: "Use the Bash tool to run `node dist/axi.js`. Run `node dist/axi.js list --status failed` to list failing runs, then `node dist/axi.js get <id> --full` per run to inspect its logs." },
     },
   ];
 }
@@ -200,7 +211,7 @@ function priceFor(model) {
 const openaiProvider = {
   key: "openai",
   available: () => Boolean(process.env.OPENAI_API_KEY?.trim()),
-  async runTask(cond, model) {
+  async runTask(cond, model, record = false) {
     const price = priceFor(model);
     const tools = cond.tools.map((t) => ({
       type: "function",
@@ -213,8 +224,12 @@ const openaiProvider = {
     let turns = 0;
     let input = 0;
     let output = 0;
+    const events = record ? [] : null; // per-event log; each carries cumulative tokens
+    const emit = (turn, type, extra) =>
+      events?.push({ seq: events.length, type, turn, tokens: { input, output, total: input + output }, ...extra });
 
     for (let i = 0; i < MAX_TURNS; i++) {
+      emit(turns + 1, "turn_start", {}); // before this turn's response → carryover totals
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -232,22 +247,36 @@ const openaiProvider = {
       const choice = json.choices?.[0];
       const msg = choice?.message ?? {};
       const calls = msg.tool_calls ?? [];
-      if (choice?.finish_reason !== "tool_calls" || calls.length === 0) break;
+      if (choice?.finish_reason !== "tool_calls" || calls.length === 0) {
+        emit(turns, "final", { text: msg.content ?? "" });
+        break;
+      }
+      emit(turns, "assistant_text", { text: msg.content ?? "" });
 
       messages.push(msg); // assistant turn carrying tool_calls
+      const done = []; // defer tool_result events so all tool_calls come first
       for (const tc of calls) {
         let content;
+        let args = {};
+        let isError = false;
         try {
-          const args = tc.function?.arguments ? JSON.parse(tc.function.arguments) : {};
+          args = tc.function?.arguments ? JSON.parse(tc.function.arguments) : {};
           content = cond.exec(tc.function.name, args);
         } catch (err) {
           content = `Error: ${err instanceof Error ? err.message : String(err)}`;
+          isError = true;
         }
+        emit(turns, "tool_call", { name: tc.function.name, args, callId: tc.id });
         messages.push({ role: "tool", tool_call_id: tc.id, content });
+        done.push({ name: tc.function.name, callId: tc.id, content, isError });
+      }
+      for (const d of done) {
+        emit(turns, "tool_result", { name: d.name, callId: d.callId, text: d.content, chars: d.content.length, isError: d.isError });
       }
     }
     const cost = (input / 1e6) * price.in + (output / 1e6) * price.out;
-    return { turns, input, output, total: input + output, cost };
+    const totals = { turns, input, output, total: input + output, cost };
+    return events ? { ...totals, events } : totals;
   },
 };
 
@@ -258,7 +287,7 @@ const openaiProvider = {
 const anthropicApiProvider = {
   key: "anthropic-api",
   available: () => Boolean(process.env.ANTHROPIC_API_KEY?.trim()),
-  async runTask(cond, model) {
+  async runTask(cond, model, record = false) {
     const price = priceFor(model);
     const tools = cond.tools.map((t) => ({
       name: t.name,
@@ -269,8 +298,12 @@ const anthropicApiProvider = {
     let turns = 0;
     let input = 0;
     let output = 0;
+    const events = record ? [] : null; // per-event log; each carries cumulative tokens
+    const emit = (turn, type, extra) =>
+      events?.push({ seq: events.length, type, turn, tokens: { input, output, total: input + output }, ...extra });
 
     for (let i = 0; i < MAX_TURNS; i++) {
+      emit(turns + 1, "turn_start", {}); // before this turn's response → carryover totals
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -293,9 +326,16 @@ const anthropicApiProvider = {
       input += json.usage?.input_tokens ?? 0;
       output += json.usage?.output_tokens ?? 0;
 
-      if (json.stop_reason !== "tool_use") break;
+      // Natural-language content this turn = concatenation of the text blocks.
+      const textOut = (json.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join("");
+      if (json.stop_reason !== "tool_use") {
+        emit(turns, "final", { text: textOut });
+        break;
+      }
+      emit(turns, "assistant_text", { text: textOut });
       messages.push({ role: "assistant", content: json.content });
       const results = [];
+      const done = []; // defer tool_result events so all tool_calls come first
       for (const block of json.content ?? []) {
         if (block.type !== "tool_use") continue;
         let text;
@@ -306,12 +346,18 @@ const anthropicApiProvider = {
           text = `Error: ${err instanceof Error ? err.message : String(err)}`;
           isError = true;
         }
+        emit(turns, "tool_call", { name: block.name, args: block.input, callId: block.id });
         results.push({ type: "tool_result", tool_use_id: block.id, content: text, ...(isError ? { is_error: true } : {}) });
+        done.push({ name: block.name, callId: block.id, text, isError });
+      }
+      for (const d of done) {
+        emit(turns, "tool_result", { name: d.name, callId: d.callId, text: d.text, chars: d.text.length, isError: d.isError });
       }
       messages.push({ role: "user", content: results });
     }
     const cost = (input / 1e6) * price.in + (output / 1e6) * price.out;
-    return { turns, input, output, total: input + output, cost };
+    const totals = { turns, input, output, total: input + output, cost };
+    return events ? { ...totals, events } : totals;
   },
 };
 
@@ -437,18 +483,40 @@ function renderTable(rows, placeholder) {
 // Main
 // ---------------------------------------------------------------------------
 
-async function runCondition(provider, cond, model) {
+async function runCondition(provider, cond, model, record) {
   const runs = [];
   for (let r = 0; r < REPEATS; r++) {
     process.stdout.write(`→ ${cond.label}${REPEATS > 1 ? ` [${r + 1}/${REPEATS}]` : ""} ... `);
-    runs.push(await provider.runTask(cond, model));
+    // Record only the FIRST repeat; the rest feed the (averaged) table only.
+    runs.push(await provider.runTask(cond, model, record && r === 0));
     console.log("done");
   }
   const avg = (k) => {
     const vals = runs.map((x) => x[k]).filter((v) => v !== null && v !== undefined);
     return vals.length ? vals.reduce((n, v) => n + v, 0) / vals.length : null;
   };
-  return { label: cond.label, turns: avg("turns"), input: avg("input"), output: avg("output"), total: avg("total"), cost: avg("cost") };
+  const row = { label: cond.label, turns: avg("turns"), input: avg("input"), output: avg("output"), total: avg("total"), cost: avg("cost") };
+
+  // The recording's totals come from that SINGLE first run — never averaged.
+  let recording = null;
+  if (record) {
+    const first = runs[0];
+    const events = first.events ?? [];
+    recording = {
+      label: cond.label,
+      toolCatalog: cond.tools.map((t) => ({ name: t.name, description: t.description })),
+      events,
+      totals: {
+        turns: first.turns,
+        input: first.input,
+        output: first.output,
+        total: first.total,
+        cost: first.cost,
+        toolCalls: events.filter((e) => e.type === "tool_call").length,
+      },
+    };
+  }
+  return { row, recording };
 }
 
 async function main() {
@@ -493,10 +561,19 @@ async function main() {
     `Provider: ${provider.key}   Model: ${model}   Repeats: ${REPEATS}   (${cachingNote})\n`,
   );
 
+  // anthropic-cli shells out and returns aggregates only — no per-event stream to record.
+  const record = RECORD && provider.key !== "anthropic-cli";
+  if (RECORD && !record) {
+    console.log(`--record ignored: provider "${provider.key}" shells out and returns aggregates only (no per-event recording).\n`);
+  }
+
   const rows = [];
+  const interfaces = [];
   for (const cond of conditions()) {
     try {
-      rows.push(await runCondition(provider, cond, model));
+      const { row, recording } = await runCondition(provider, cond, model, record);
+      rows.push(row);
+      if (recording) interfaces.push(recording);
     } catch (err) {
       console.log(`FAILED (${err instanceof Error ? err.message : String(err)})`);
       rows.push({ label: cond.label });
@@ -510,6 +587,26 @@ async function main() {
       "Tokens are attributable to the interface. Turns + token volume are the robust " +
       "signals; on anthropic-cli the cost column is the CLI's estimate.)",
   );
+
+  // Write the recording (all three interfaces in one file) when --record was honored.
+  if (record && interfaces.length) {
+    const sanitizedModel = model.replace(/[^a-zA-Z0-9]/g, "-");
+    const outPath = RECORD_OUT
+      ? resolve(RECORD_OUT)
+      : join(PKG_ROOT, "recordings", `${provider.key}-${sanitizedModel}.json`);
+    const doc = {
+      schemaVersion: 1,
+      provider: provider.key,
+      model,
+      task: TASK,
+      system: SYSTEM,
+      recordedAt: new Date().toISOString(),
+      interfaces,
+    };
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, JSON.stringify(doc, null, 2));
+    console.log(`\nRecording written to ${outPath}`);
+  }
 }
 
 main().catch((err) => {

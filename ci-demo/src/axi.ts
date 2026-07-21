@@ -18,8 +18,12 @@ import {
  *   P3 content truncation        — logs clipped with a --full escape hatch
  * Plus a definitive empty state (P5) and a contextual next-step hint (P9).
  *
- * Two subcommands:
+ * Three subcommands:
  *   ci list [--status <s>] [--full]   the compact run list (the baseline demo)
+ *   ci get <id> [--full]              a compact detail for ONE run — the same
+ *                                      principles as `list`, drilled in: minimal
+ *                                      schema + a summary line + truncated logs
+ *                                      (--full for the tail) + a next hint.
  *   ci failures                        the multi-step task, answered in ONE call:
  *                                      each failing run's failing job + a
  *                                      flaky-vs-regression classification. This
@@ -69,6 +73,36 @@ function runList(): void {
   console.log(renderOutput(output)); // Principle 1: TOON, ~40% smaller than JSON
 }
 
+/** `ci get <id>` — a compact detail for one run, same principles as `list`. */
+function runGet(): void {
+  const id = process.argv[3];
+  const full = hasFlag("--full");
+  const run = loadRuns().find((r) => r.id === id);
+
+  // Principle 5: definitive not-found state — a summary line, never silence.
+  if (!run) {
+    console.log(renderOutput({ summary: `run ${id ?? "?"} not found`, run: null }));
+    return;
+  }
+
+  const output = {
+    // Principle 4: pre-computed aggregate up front — the job rollup as a line.
+    summary: `${run.id} · ${run.status} · ${failingJobs(run).length} failing`,
+    // Principle 2: minimal schema — the fields you need to triage, not all 10+.
+    run: {
+      id: run.id,
+      status: run.status,
+      branch: run.branch,
+      failing_jobs: failingJobs(run).join(", ") || "—",
+      // Principle 3: content truncation with a --full escape hatch + size hint.
+      logs: full ? run.logs : truncate(run.logs, 120),
+    },
+    // Principle 9: contextual next step.
+    next: "ci get <id> --full   # for the full log tail",
+  };
+  console.log(renderOutput(output)); // Principle 1: TOON, ~40% smaller than JSON
+}
+
 /** `ci failures` — the multi-step task answered in a single compact call. */
 function runFailures(): void {
   const full = hasFlag("--full");
@@ -102,8 +136,23 @@ function runFailures(): void {
 
 const command = process.argv[2];
 switch (command) {
+  case "--help":
+  case "-h":
+    // Standard discovery affordance, kept compact in the AXI spirit.
+    console.log(
+      [
+        "ci — agent-native CI runs",
+        "  ci list [--status <s>] [--full]   compact run list",
+        "  ci get <id> [--full]              one run's details",
+        "  ci failures                       all failing runs classified, in one call",
+      ].join("\n"),
+    );
+    break;
   case "failures":
     runFailures();
+    break;
+  case "get":
+    runGet();
     break;
   case "list":
   default:

@@ -652,13 +652,13 @@
           </div>
           <div class="pbar-row">
             <div class="pbar-label">CLI<small>verbose JSON</small></div>
-            <div class="pbar-track"><div class="pbar-fill tax-dim" data-w="34.85"></div></div>
-            <div class="pbar-num dim-c" data-to="1358">0<small class="muted">&minus;65% vs MCP</small></div>
+            <div class="pbar-track"><div class="pbar-fill tax-dim" data-w="6.77"></div></div>
+            <div class="pbar-num dim-c" data-to="264">0<small class="muted">&minus;93% vs MCP</small></div>
           </div>
           <div class="pbar-row">
             <div class="pbar-label accent">AXI<small>TOON · 4 fields · trunc</small></div>
             <div class="pbar-track"><div class="pbar-fill win" data-w="6.06"></div></div>
-            <div class="pbar-num win-c" data-to="236">0<small style="color:var(--hero-ink)">&minus;94% · &minus;83% vs CLI</small></div>
+            <div class="pbar-num win-c" data-to="236">0<small style="color:var(--hero-ink)">&minus;94% · &minus;11% vs CLI</small></div>
           </div>
         </div>
         <div class="spacer-m"></div>
@@ -676,20 +676,23 @@
             Your browser can&rsquo;t play this video.
           </video>
           <p class="mono muted" style="font-size:15px;margin-top:10px;">recording/agent-run.mp4 &mdash; drop the file here</p>
-          <p class="note" style="margin-top:12px;">A real agent (gpt-4o-mini) doing the task through each interface, averaged over three runs. Recorded so the numbers stay stable, with no network on stage.</p>
+          <p class="note" style="margin-top:12px;">A real agent doing the task through each interface — gpt-4o and gpt-4o-mini, one recorded run each. Recorded so the numbers stay stable, with no network on stage.</p>
         </div>
         <div>
-          <p class="col-title">Turns · input tokens · cost per interface</p>
+          <p class="col-title">Turns · input tokens per interface — two models, one run each</p>
           <table class="grid">
-            <thead><tr><th>Interface</th><th class="num">Turns</th><th class="num">Input tokens</th><th class="num">Cost (USD)</th></tr></thead>
+            <thead>
+              <tr><th rowspan="2">Interface</th><th colspan="2" style="text-align:center">gpt-4o</th><th colspan="2" style="text-align:center">gpt-4o-mini</th></tr>
+              <tr><th style="text-align:right">Turns</th><th style="text-align:right">Input tok</th><th style="text-align:right">Turns</th><th style="text-align:right">Input tok</th></tr>
+            </thead>
             <tbody>
-              <tr><td>CLI</td><td class="num">2.3</td><td class="num">4,923</td><td class="num">$0.0009</td></tr>
-              <tr><td>MCP</td><td class="num">4.0</td><td class="num amber">10,824</td><td class="num amber">$0.0018</td></tr>
-              <tr class="hot"><td>AXI</td><td class="num">2.0</td><td class="num">499</td><td class="num">$0.0002</td></tr>
+              <tr><td>CLI</td><td class="num">5</td><td class="num">4,063</td><td class="num">10</td><td class="num amber">11,091</td></tr>
+              <tr><td>MCP</td><td class="num">4</td><td class="num amber">10,855</td><td class="num">4</td><td class="num amber">10,812</td></tr>
+              <tr class="hot"><td>AXI</td><td class="num">3</td><td class="num">2,217</td><td class="num">3</td><td class="num">2,217</td></tr>
             </tbody>
           </table>
           <div class="spacer-m"></div>
-          <p class="note win">One payload became a whole task. Input tokens are charged every turn, so the per-call gap compounds: AXI reads <b>499</b> against MCP's <b>10,824</b>.</p>
+          <p class="note win">All three reached the right answer both times — the difference is what it cost. AXI stays lowest on turns <b>and</b> tokens regardless of model. MCP's schema tax keeps it heavy either way; the blunt CLI is fine on gpt-4o but sends gpt-4o-mini thrashing to <b>10 turns</b>.</p>
         </div>
       </div>
     </section>

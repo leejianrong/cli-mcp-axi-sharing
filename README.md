@@ -18,13 +18,16 @@ gaps, not the exact digits:
 | Interface | Payload tokens | vs MCP |
 |---|---|---|
 | MCP (21 tool schemas + one result) | 3,897 | baseline |
-| CLI (verbose JSON) | 1,358 | −65% |
-| **AXI** (TOON, 4 fields, truncated) | **236** | **−94%** (−83% vs CLI) |
+| CLI (verbose JSON) | 264 | −93% |
+| **AXI** (TOON, 4 fields, truncated) | **236** | **−94%** (−11% vs CLI) |
 
-The MCP payload is nearly 3× the CLI's verbose dump because this server exposes a
-realistic ~21-tool CI surface (runs, jobs, logs, artifacts, workflows, deployments,
-…), and every schema rides in context on _every_ turn. That gap widens with a bigger
-server and narrows with a leaner one; AXI barely moves either way.
+MCP dwarfs the other two — roughly 15× the CLI's payload — because this server
+exposes a realistic ~21-tool CI surface (runs, jobs, logs, artifacts, workflows,
+deployments, …), and every schema rides in context on _every_ turn. That gap widens
+with a bigger server and narrows with a leaner one. CLI and AXI sit close together on
+this single call: both return a summary, so the −11% edge is TOON versus verbose JSON
+(plus AXI folding in a summary line, a log preview, and a next-step hint for free).
+Where AXI pulls away is across a whole task — see the recorded agent run below.
 
 ## Quick start
 

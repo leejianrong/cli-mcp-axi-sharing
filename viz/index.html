@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLI vs MCP vs AXI — agent-run playback</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1 class="title">
+        <span class="t-cli">CLI</span><span class="vs">vs</span><span class="t-mcp">MCP</span><span class="vs">vs</span><span class="t-axi">AXI</span>
+      </h1>
+      <p class="prompt-line">
+        <span class="pl-label">prompt</span>
+        <span class="pl-text" id="task">Loading recording…</span>
+      </p>
+      <p class="exhibit" id="exhibit"></p>
+    </div>
+    <div class="meta">
+      <span class="chip" id="provider">—</span>
+      <span class="chip">recorded <b id="recorded">—</b></span>
+      <div class="source">
+        <select id="recSel" aria-label="Choose a bundled recording"></select>
+        <button class="btn" id="filebtn">Load file…</button>
+        <input type="file" id="file" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </header>
+
+  <!-- token scoreboard: the ~16× gap on one shared scale, always visible -->
+  <section id="scoreboard" class="scoreboard" aria-label="Cumulative tokens across interfaces">
+    <div class="sb-cap"><span>cumulative tokens</span><span class="sb-note" data-c="note">shared scale</span></div>
+    <div class="sb-rows" data-c="rows"></div>
+  </section>
+
+  <div class="transport">
+    <div class="seg" role="group" aria-label="Layout mode">
+      <button id="modeRace" aria-pressed="true">Parallel race</button>
+      <button id="modeSeq" aria-pressed="false">Sequential</button>
+    </div>
+    <div class="lanetabs" id="lanetabs" role="group" aria-label="Interface"></div>
+    <div class="tbtns">
+      <button class="tbtn" id="stepb" title="Step back (←)" aria-label="Step back">⏮</button>
+      <button class="tbtn play" id="playbtn" title="Play / pause (space)" aria-label="Play or pause">▶</button>
+      <button class="tbtn" id="stepf" title="Step forward (→)" aria-label="Step forward">⏭</button>
+    </div>
+    <div class="scrub-wrap">
+      <input type="range" id="scrub" min="0" max="1" value="0" step="1" aria-label="Playback position">
+      <span class="pos" id="pos"><b>0</b> / 0 events</span>
+    </div>
+    <label class="speed">speed
+      <select id="speed" aria-label="Playback speed">
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+        <option value="4">4×</option>
+      </select>
+    </label>
+  </div>
+
+  <main class="stage race" id="stage"></main>
+  <p class="notice" id="notice"></p>
+
+  <section class="verify">
+    <h2>Did all three get it right?</h2>
+    <p class="ask mono" id="ask"></p>
+    <div class="answers" id="answers"></div>
+  </section>
+
+</div>
+
+<div id="drop"><div class="card">Drop a recording&nbsp;.json to replay it</div></div>
+
+<script src="app.js"></script>
+</body>
+</html>

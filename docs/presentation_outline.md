@@ -100,20 +100,21 @@
   4. Run the **tokenizer diff** across all three payloads → keep the result on screen for slide 11. (~1 min)
 - **Speaker note:** this is a *run*, not a build — narrate the effect, not the typing. If any command wobbles, **cut to the recording** immediately (script has the trigger + timestamps). Don't debug live.
 
-## Slide 11 — The first call, measured (1:00)
-- **Layout:** Big, bold bar chart. Columns: Interface · First-call input tokens · vs MCP. These are the **real** input tokens the model read on its **first call**, taken from the gpt-4o recording (`recordings/openai-gpt-4o.json`, the first turn's `tokens.input`) — not an estimate:
+## Slide 11 — The tool surface, three ways (1:00)
+- **Layout:** Bar chart of first-call input tokens (real, from `recordings/openai-gpt-4o.json`, the first turn's `tokens.input`), one bar per interface, each labelled with how it exposes its surface. Below the bars, one line per interface on how it carries that surface.
 
-  | Interface | First-call input tokens | vs MCP |
+  | Interface | Surface | First-call input tokens |
   |---|---|---|
-  | MCP (21 tool schemas) | **2,188** | baseline |
-  | CLI (1 tool) | **184** | −92% |
-  | AXI (1 tool) | **181** | −92% (≈ CLI) |
+  | MCP | 21 typed schemas, loaded every turn | **2,188** |
+  | CLI | 1 run tool, discover via `--help` | **184** |
+  | AXI | 1 run tool, self-documenting | **181** |
 
-- **Talking points:**
-  - Read the numbers: MCP already carries all 21 tool schemas — roughly two thousand tokens of schema tax before it does any work. CLI and AXI each expose a single tool, so per call they're neck and neck.
-  - **Say the honest framing:** "These are real input tokens from the run, not an estimate. One call. The gap you see is MCP's schema tax; CLI and AXI are level. But an agent never calls a tool once…"
-  - Offline aside (only if asked): `make token-diff` prints a rough gpt-tokenizer *approximation* of the per-call payloads (schemas + command output). It's a dev sanity check, **not** the slide's source — the slide numbers are the real measured tokens from the run.
-- **Transition:** "…so what happens across the whole task? Here's a real agent doing exactly this." → open the interactive demo (next slide).
+- **The three strategies (the honest core, and the answer to "isn't one tool unfair?"):**
+  - **MCP** declares its whole typed catalog up front and re-reads it every turn. A fixed schema tax, but the model never has to guess.
+  - **CLI** exposes a single run tool, so the surface is not declared; the model discovers it. In the gpt-4o run it guessed wrong three times, then fell back to `--help`. That discovery cost is real, and it lands in the whole-task total (next slide), not here.
+  - **AXI** also exposes one tool, but it's conventional and self-documenting (its output prints the next command), so the model needed no discovery at all.
+- **If a sharp lead asks "isn't one tool an unfair advantage?":** the surface still has to be learned; we just don't declare it up front, because that isn't how CLIs are wired to agents. The cost shows up as discovery (CLI's wrong guesses and `--help`) and is counted in the whole-task numbers. Declaring every subcommand in the tool def, or trimming MCP to three tools, would both be less realistic.
+- **Transition:** "The first call is only the setup. What each strategy really costs, across the whole task, is next." → open the interactive demo.
 
 ## Slide 12 — Real agent, our app: the recorded run (2:30)
 - **Layout:** Embedded **pre-recorded video** (or GIF) of a genuine agent completing a **multi-step task** — _"for each failing run, which job failed, and is it a flaky/infra issue or a real regression?"_ — through each interface. Overlay/caption the live counters: **turns · total tokens · cost**. Below the video, the summary table — two models, one recorded run each (real numbers from `scripts/agent-run.mjs --provider openai`):

@@ -202,35 +202,35 @@ And there's the payoff. Same task, three payloads, counted with a tokenizer. Hol
 
 [If any command errors or hangs past about five seconds, stop and say: "Let me switch to a capture of this exact run so we don't waste your time," then play the recording from the noted timestamp. Narrate over it exactly as you would live. Don't debug.]
 
-## Slide 11 — The first call, measured (1:00)
+## Slide 11 — The tool surface, three ways (1:00)
 
-[Advance to the chart. Read the numbers off it.]
+[Advance to the chart.]
 
-These are real input tokens from the recorded gpt-4o run, not an estimate, and this is just the model's first call. MCP reads two thousand one hundred and eighty-eight tokens, because it carries all twenty-one tool schemas before it does any work. The CLI reads a hundred and eighty-four, and AXI a hundred and eighty-one. Both are about ninety-two percent below MCP, and they're level with each other, because each one exposes a single tool.
+This is the model's first call, real input tokens from the gpt-4o run. Three interfaces, three ways to carry the tool surface. MCP declares all twenty-one tools up front, a full typed schema each, and it re-reads them every single turn. That's two thousand one hundred and eighty-eight tokens of schema tax before it does any work. CLI and AXI each expose a single run tool, so they start far cheaper, a hundred and eighty-four and a hundred and eighty-one.
 
-[Say the honest framing plainly.]
+[This is the honest part. Say it plainly, because it's the obvious pushback.]
 
-So on one call the entire gap is MCP's schema tax. CLI and AXI are neck and neck. That's the honest picture: once you're down to a single tool, the interface style barely moves the per-call number. Where AXI pulls away is across the whole task, which is the next slide, because an agent never calls a tool just once.
+A fair question: isn't one tool cheating? The surface still has to be learned; we just don't hand it over up front, because that isn't how you wire a CLI to an agent. And you can see the cost. In this run the CLI guessed wrong three times, then fell back to help, before it found the right command. AXI needed none of that, because it's conventional and it prints the next command to run. So the CLI's discovery cost is real, it just shows up later, in the whole-task total. MCP's cost is the schema tax it pays every turn. AXI pays almost nothing either way.
+
+[Transition.]
+
+The first call is only the setup. What each of these really costs, across the whole task, is the next slide.
 
 ## Slide 12 — A real agent on our app, recorded (2:30)
 
-[Advance. Open the interactive demo and press play. Per-lane counters on screen: turns, tool calls, tokens.]
+[Advance to the table. The demo you opened a couple of slides back produced these numbers; here they are side by side.]
 
-[Say this out loud so it's never mistaken for sleight of hand.]
+This is a real agent doing the multi-step task on our app, once through each interface, recorded so the numbers stay stable and nothing hits the network on stage. The task: for each failing run, which job failed, and is it flaky infrastructure or a real regression. The comparison is fair: the same minimal system prompt, each interface gets only its own tools, no prompt caching.
 
-This is a recording, not a live agent, but it is a genuine agent doing a real, multi-step task on the same app we just ran, once through each interface. The task: for each failing run, figure out which job failed and whether it's a flaky infrastructure issue or a real regression. It's recorded for one reason, that the numbers stay stable and there's no network on stage. The comparison is fair: the same minimal system prompt, each interface gets only its own tools, and no prompt caching, so the tokens you see belong to the interface, not to some harness overhead.
+[Walk the gpt-4o column.]
 
-[Let it play. Point at the lanes as the counters move.]
+All three take the same path: list the failing runs, then pull each one's detail. MCP returns summaries, so the agent drills in per run, and every one of those turns re-reads all twenty-one schemas. That's why it's heaviest, about eleven thousand input tokens. AXI does the same drill-down with lean payloads and finishes lowest, around two thousand two hundred. The CLI sits in between, near four thousand.
 
-Watch what compounds. All three take the same path: list the failing runs, then pull each one's detail. MCP returns summaries, so the agent drills in per run, and every one of those turns re-reads all twenty-one schemas. That's why it carries the heaviest load, about ten thousand nine hundred input tokens on gpt-4o. AXI does the same drill-down with lean, compact payloads and finishes lowest, around two thousand two hundred. The CLI sits in between, near four thousand.
+[Now the gpt-4o-mini column.]
 
-[Switch the exhibit to gpt-4o-mini.]
+Same runs, a weaker model. On gpt-4o the CLI is fine, five turns. On gpt-4o-mini the blunt interface makes it thrash, ten turns and twenty-one tool calls, to reach the same answer AXI gets in three. All three still get it right, so the story is cost, not correctness. A good interface saves tokens and keeps a weaker model on the rails.
 
-Same runs, a weaker model. On gpt-4o the CLI is fine, five turns. On gpt-4o-mini the blunt interface makes it thrash, ten turns and twenty-one tool calls, to reach the same answer AXI gets in three. All three still get it right, so the story here is cost, not correctness. A good interface saves tokens and keeps a weaker model on the rails.
-
-The point is right there in the table. Slide 11 was a single payload. Here you see it compound: because tokens are charged per turn, that per-call gap multiplies across the whole task. That's the mechanism, running end to end.
-
-[If the video won't play, show the static summary table and narrate it. Never troubleshoot playback live.]
+The mechanism is right there. Slide 11 was a single call; here it compounds, because tokens are charged per turn, so that per-call gap multiplies across the whole task.
 
 ## Slide 13 — And it holds at scale: published benchmarks (1:30)
 

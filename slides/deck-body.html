@@ -638,70 +638,67 @@
       </div>
     </section>
 
-    <!-- ============ SLIDE 10 — LIVE DEMO placeholder ============ -->
+    <!-- ============ SLIDE 10 — Open the interactive demo ============ -->
     <section class="slide" data-slide="10" id="slide-10">
-      <div class="placeholder">
-        <div class="cue">&#127916;</div>
-        <div class="big">Live run: switch to terminal</div>
-        <div class="mono muted" style="font-size:18px;">CLI &rarr; MCP payload &rarr; AXI output &rarr; token diff</div>
-        <div class="mono" style="font-size:15px;color:var(--tax-ink);">fallback: recording/demo-run.mp4</div>
+      <h2 class="head">See it run: open the demo</h2>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;gap:22px;max-width:940px;">
+        <a class="demo-cta" href="https://leejianrong.github.io/cli-mcp-axi-sharing/viz/" target="_blank" rel="noopener">
+          <span class="demo-cta-play">&#9654;</span>
+          <span class="demo-cta-text"><b>Open the interactive demo</b><small>replay a real agent, side by side, through CLI &middot; MCP &middot; AXI</small></span>
+        </a>
+        <p class="demo-cta-url">leejianrong.github.io/cli-mcp-axi-sharing/viz/</p>
+        <p class="lead">A recorded agent run you can step, scrub, and replay in the browser. Turns, tool calls, and tokens tick up per interface; switch between gpt-4o and gpt-4o-mini to see how a weaker model copes. It is static and offline, so it just opens.</p>
       </div>
     </section>
 
     <!-- ============ SLIDE 11 — Signature: payload bar ============ -->
     <section class="slide" data-slide="11" id="slide-11">
-      <h2 class="head" style="margin-bottom:20px;">The first call, measured</h2>
+      <h2 class="head" style="margin-bottom:20px;">The tool surface, three ways</h2>
       <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
         <div class="payload">
           <div class="pbar-row">
-            <div class="pbar-label">MCP<small>21 tool schemas</small></div>
+            <div class="pbar-label">MCP<small>21 schemas &middot; all up front</small></div>
             <div class="pbar-track"><div class="pbar-fill tax" data-w="100"></div></div>
-            <div class="pbar-num tax-c" data-to="2188">0<small class="muted">baseline</small></div>
+            <div class="pbar-num tax-c" data-to="2188">0<small class="muted">first-call tokens</small></div>
           </div>
           <div class="pbar-row">
-            <div class="pbar-label">CLI<small>1 tool</small></div>
+            <div class="pbar-label">CLI<small>1 tool &middot; discover via --help</small></div>
             <div class="pbar-track"><div class="pbar-fill tax-dim" data-w="8.41"></div></div>
             <div class="pbar-num dim-c" data-to="184">0<small class="muted">&minus;92% vs MCP</small></div>
           </div>
           <div class="pbar-row">
-            <div class="pbar-label accent">AXI<small>1 tool</small></div>
+            <div class="pbar-label accent">AXI<small>1 tool &middot; self-documenting</small></div>
             <div class="pbar-track"><div class="pbar-fill win" data-w="8.27"></div></div>
-            <div class="pbar-num win-c" data-to="181">0<small style="color:var(--hero-ink)">&minus;92% · &asymp; CLI</small></div>
+            <div class="pbar-num win-c" data-to="181">0<small style="color:var(--hero-ink)">&minus;92% vs MCP</small></div>
           </div>
         </div>
         <div class="spacer-m"></div>
-        <p class="note">Real input tokens the model reads on its <b>first call</b>, from the gpt-4o run. MCP carries all 21 tool schemas; CLI and AXI each expose one. Per call, CLI and AXI are neck and neck; MCP already pays the schema tax. And this is just one call; an agent never calls a tool once.</p>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:18px;line-height:1.45;max-width:70ch;">
+          <div><b style="color:var(--tax-ink)">MCP</b> declares all 21 schemas up front and re-reads them every turn. A fixed tax, but it never guesses wrong.</div>
+          <div><b style="color:var(--tax-dim)">CLI</b> exposes one run tool, so the surface has to be learned: in the gpt-4o run the model guessed wrong three times, then fell back to <span class="mono">--help</span>.</div>
+          <div><b style="color:var(--hero-ink)">AXI</b> exposes one tool too, but it's conventional and prints the next command, so the model needed no discovery at all.</div>
+        </div>
+        <p class="note" style="margin-top:16px;">The first call is only the setup. What each strategy really costs, across the whole task, is the next slide.</p>
       </div>
     </section>
 
     <!-- ============ SLIDE 12 — Recorded real-agent run ============ -->
     <section class="slide" data-slide="12" id="slide-12">
       <h2 class="head" style="margin-bottom:16px;">A real agent on our app, recorded</h2>
-      <div class="fill two-col" style="align-items:start;">
-        <div>
-          <a class="demo-cta" href="https://leejianrong.github.io/cli-mcp-axi-sharing/viz/" target="_blank" rel="noopener">
-            <span class="demo-cta-play">&#9654;</span>
-            <span class="demo-cta-text"><b>Open the interactive demo</b><small>replay the agent, side by side, through CLI &middot; MCP &middot; AXI</small></span>
-          </a>
-          <p class="demo-cta-url">leejianrong.github.io/cli-mcp-axi-sharing/viz/</p>
-          <p class="note" style="margin-top:12px;">A real agent doing the task through each interface — gpt-4o and gpt-4o-mini, one recorded run each. Step, scrub, and watch the token cost diverge — no network on stage.</p>
-        </div>
-        <div>
-          <p class="col-title">Turns · input tokens per interface — two models, one run each</p>
-          <table class="grid">
-            <thead>
-              <tr><th rowspan="2">Interface</th><th colspan="2" style="text-align:center">gpt-4o</th><th colspan="2" style="text-align:center">gpt-4o-mini</th></tr>
-              <tr><th style="text-align:right">Turns</th><th style="text-align:right">Input tok</th><th style="text-align:right">Turns</th><th style="text-align:right">Input tok</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>CLI</td><td class="num">5</td><td class="num">4,063</td><td class="num">10</td><td class="num amber">11,091</td></tr>
-              <tr><td>MCP</td><td class="num">4</td><td class="num amber">10,855</td><td class="num">4</td><td class="num amber">10,812</td></tr>
-              <tr class="hot"><td>AXI</td><td class="num">3</td><td class="num">2,217</td><td class="num">3</td><td class="num">2,217</td></tr>
-            </tbody>
-          </table>
-          <div class="spacer-m"></div>
-          <p class="note win">All three reached the right answer both times — the difference is what it cost. AXI stays lowest on turns <b>and</b> tokens regardless of model. MCP's schema tax keeps it heavy either way; the blunt CLI is fine on gpt-4o but sends gpt-4o-mini thrashing to <b>10 turns</b>.</p>
-        </div>
+      <div class="fill" style="display:flex;flex-direction:column;justify-content:center;max-width:1000px;">
+        <p class="col-title">Turns and input tokens per interface, two models, one recorded run each</p>
+        <table class="grid">
+          <thead>
+            <tr><th rowspan="2">Interface</th><th colspan="2" style="text-align:center">gpt-4o</th><th colspan="2" style="text-align:center">gpt-4o-mini</th></tr>
+            <tr><th style="text-align:right">Turns</th><th style="text-align:right">Input tok</th><th style="text-align:right">Turns</th><th style="text-align:right">Input tok</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>CLI</td><td class="num">5</td><td class="num">4,063</td><td class="num">10</td><td class="num amber">11,091</td></tr>
+            <tr><td>MCP</td><td class="num">4</td><td class="num amber">10,855</td><td class="num">4</td><td class="num amber">10,812</td></tr>
+            <tr class="hot"><td>AXI</td><td class="num">3</td><td class="num">2,217</td><td class="num">3</td><td class="num">2,217</td></tr>
+          </tbody>
+        </table>
+        <p class="note win" style="margin-top:22px;">All three got the right answer both times; the difference is cost. AXI stays lowest on turns <b>and</b> tokens on either model, MCP's schema tax keeps it heavy, and the blunt CLI thrashes to <b>10 turns</b> on gpt-4o-mini. Recorded, so the numbers stay stable on stage; replay it in the demo.</p>
       </div>
     </section>
 
@@ -717,7 +714,7 @@
             <tr><td>CLI</td><td class="num">86%</td><td class="num">$0.054</td><td class="num">17.4s</td><td class="num">3</td><td class="num">47K</td></tr>
             <tr><td>MCP (eager)</td><td class="num">87%</td><td class="num amber">$0.148</td><td class="num">34.2s</td><td class="num">6</td><td class="num amber">175K</td></tr>
             <tr><td>MCP (ToolSearch)</td><td class="num">82%</td><td class="num amber">$0.147</td><td class="num">41.1s</td><td class="num">8</td><td class="num amber">153K</td></tr>
-            <tr><td>Code-mode</td><td class="num">84%</td><td class="num">$0.101</td><td class="num">43.4s</td><td class="num">7</td><td class="num">&mdash;</td></tr>
+            <tr><td>Code-mode</td><td class="num">84%</td><td class="num">$0.101</td><td class="num">43.4s</td><td class="num">7</td><td class="num">n/a</td></tr>
           </tbody>
         </table>
         <div class="spacer-m"></div>

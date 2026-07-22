@@ -159,18 +159,18 @@ ci list --status failed --full   # same, but full logs — the escape hatch
 ci list --status failed > out/axi-output.txt
 ```
 
-### Step 4 — The payoff: the first-call token gap (~1 min)
-**Show the slide "The first call, measured."** These are the **real** input tokens the model read on its very first call, straight from the gpt-4o recording (not an estimate):
+### Step 4 — The tool surface, three ways (~1 min)
+**Show the slide "The tool surface, three ways."** First-call input tokens, real, from the gpt-4o recording:
 ```
 first-call input tokens (real, gpt-4o run):
-  MCP  (21 tool schemas)   2,188   (baseline)
-  CLI  (1 tool) .........    184    -92% vs MCP
-  AXI  (1 tool) .........    181    -92% vs MCP,  ≈ CLI
+  MCP  21 schemas, all up front .....  2,188   (baseline)
+  CLI  1 tool, discover via --help ..    184    -92% vs MCP
+  AXI  1 tool, self-documenting .....    181    -92% vs MCP
 ```
-**Say:** "One call. MCP already carries all 21 tool schemas — about two thousand tokens of schema tax before it does any work. CLI and AXI each expose a single tool, so per call they're neck and neck. But an agent never calls a tool just once…" → open the interactive demo (next step).
+**Say:** "Three ways to carry the tool surface. MCP declares all 21 schemas up front and re-reads them every turn, a fixed tax. CLI and AXI expose one run tool, so they start cheap, but the surface still has to be learned. In this run the CLI guessed wrong three times before falling back to --help; AXI needed nothing, because it prints the next command to run. So the CLI's cost is real, it just lands later. An agent never calls a tool just once…" → open the interactive demo (next step).
 
-> The schema tax here is MCP's alone; the CLI-vs-AXI gap is tiny on a single call. Where AXI pulls away is across the *whole task* — leaner outputs and fewer drill-ins compound — which the recorded run shows next.
-> **Offline aside (optional):** `make token-diff` prints a rough *gpt-tokenizer approximation* of the per-call payloads (schemas + command output). It's a handy sanity check, but the numbers on the slide are the real measured ones from the run — don't confuse the two.
+> If someone asks whether one tool is an unfair advantage: the surface still gets learned, we just don't declare it up front (that isn't how CLIs are wired to agents). The discovery cost shows up in the whole-task total, next.
+> **Offline aside (optional):** `make token-diff` prints a rough gpt-tokenizer approximation of the per-call payloads. A handy sanity check, not the slide numbers.
 
 ### Step 5 — Open the interactive demo (~2.5 min) [slide "A real agent, recorded"]
 Leave the terminal. Open the demo linked on the slide — **leejianrong.github.io/cli-mcp-axi-sharing/viz/** (or run it locally with `make viz`). It replays a **recorded** real-agent run, so the numbers are stable and nothing touches the network on stage.

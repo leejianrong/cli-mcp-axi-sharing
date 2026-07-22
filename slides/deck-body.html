@@ -774,16 +774,41 @@
           <dt>Can I get AXI's benefits without leaving MCP?</dt>
           <dd>Mostly yes. Minimal schemas, aggregates, and truncation all apply to MCP tool results.</dd>
           <dt>What's the catch?</dt>
-          <dd>You have to own and shape the tool. You can't AXI-ify a third-party API you don't control.</dd>
+          <dd>You can only shape what you own. AXI is all about the tool's output, so a third-party API you don't control hands back its own shape. You can still wrap it in a thin tool of your own and reshape the output there, but that wrapper is then yours to build and maintain.</dd>
         </dl>
       </div>
+    </section>
+
+    <!-- ============ SLIDE 17 — Appendix: TOON vs JSON ============ -->
+    <section class="slide" data-slide="17" id="slide-17">
+      <h2 class="head">Appendix: TOON vs JSON</h2>
+      <div class="fill two-col" style="align-items:start;">
+        <div>
+          <p class="col-title">JSON &middot; the same three runs</p>
+          <pre class="code before" style="font-size:15px;line-height:1.45;">{
+  "runs": [
+    { "id": "run_8f2a", "status": "failed",  "branch": "feat/checkout-retry" },
+    { "id": "run_3d71", "status": "failed",  "branch": "fix/session-expiry"  },
+    { "id": "run_2f88", "status": "success", "branch": "feat/csv-export"      }
+  ]
+}</pre>
+        </div>
+        <div>
+          <p class="col-title">TOON &middot; what AXI emits</p>
+          <pre class="code" style="font-size:15px;line-height:1.45;">runs[3]{id,status,branch}:
+  run_8f2a,failed,feat/checkout-retry
+  run_3d71,failed,fix/session-expiry
+  run_2f88,success,feat/csv-export</pre>
+        </div>
+      </div>
+      <p class="note" style="margin-top:10px;">Token-Oriented Object Notation. It drops the braces, brackets, and quotes, and for a uniform array it names the row count and columns once (<span class="mono">runs[3]{id,status,branch}</span>), then streams CSV-style rows. That is where the savings come from: up to about 60% fewer tokens than JSON on tabular data, and roughly 40% on our failing-runs payload. (Plain objects are <span class="mono">key: value</span>, nesting is indentation, and simple lists are <span class="mono">key[n]: a,b,c</span>.)</p>
     </section>
 
     <!-- ============ footer (shared) ============ -->
     <footer class="deck-footer">
       <div class="foot-title">Apps Agents Love · CLI vs MCP vs AXI</div>
       <div class="foot-echo" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="foot-num"><b id="slideNum">1</b> / 17</div>
+      <div class="foot-num"><b id="slideNum">1</b> / 18</div>
     </footer>
   </div>
 </div>

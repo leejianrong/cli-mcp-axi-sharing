@@ -29,12 +29,12 @@ const BUNDLED = [
   {
     file: "openai-gpt-4o.json",
     label: "gpt-4o · capable model",
-    note: "Capable model — all three reach the right answer, so the gap is pure token cost: MCP's schema tax dominates, AXI is leanest, CLI sits in between.",
+    note: "Capable model: all three reach the right answer, so the gap is pure token cost. MCP's schema tax dominates, AXI is leanest, CLI sits in between.",
   },
   {
     file: "openai-gpt-4o-mini.json",
     label: "gpt-4o-mini · small model",
-    note: "Small model — still correct on all three, but the blunt CLI makes it thrash: 10 turns and 21 tool calls to land the answer AXI reaches in 3 turns and one call.",
+    note: "Small model, still correct on all three, but the blunt CLI thrashes: 10 turns and 21 tool calls to land the answer AXI reaches in 3.",
   },
   {
     file: "sample.json",
@@ -275,7 +275,7 @@ function renderLane(i) {
     const laneW = Math.max(120, laneEl.clientWidth - 130);
     const last = results.length - 1;
     bars.innerHTML = results.length
-      ? results.map((r, idx) => `<div class="lg-row"><div class="lg-bar${r.isError ? " err" : ""}${idx === last ? " grow" : ""}" style="width:${sizePx(r.chars, laneW)}px" title="${esc(r.name)} — ${r.chars} chars"></div><span class="lg-chars">${r.chars.toLocaleString()}</span></div>`).join("")
+      ? results.map((r, idx) => `<div class="lg-row"><div class="lg-bar${r.isError ? " err" : ""}${idx === last ? " grow" : ""}" style="width:${sizePx(r.chars, laneW)}px" title="${esc(r.name)} · ${r.chars} chars"></div><span class="lg-chars">${r.chars.toLocaleString()}</span></div>`).join("")
       : `<span class="lg-empty">no payload yet</span>`;
     bars.dataset.count = String(results.length);
   }

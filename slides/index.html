@@ -239,15 +239,23 @@
   }
   .placeholder .big { font-family: var(--font-display); font-size: 40px; font-weight: 700; }
   .placeholder .cue { font-size: 64px; }
-  .videobox {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    max-height: 380px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: #0E141B;
-    display: block;
+  .demo-cta {
+    display: flex; align-items: center; gap: 18px;
+    width: 100%; box-sizing: border-box; padding: 24px 26px;
+    text-decoration: none; border: 1px solid var(--border); border-radius: 14px;
+    background: var(--surface);
+    transition: border-color .2s, box-shadow .2s, transform .2s;
   }
+  .demo-cta:hover { border-color: var(--hero-ink); box-shadow: 0 16px 34px -20px var(--hero-ink); transform: translateY(-1px); }
+  .demo-cta-play {
+    flex: none; width: 54px; height: 54px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 22px;
+    background: var(--hero-ink); color: #fff;
+  }
+  .demo-cta-text { display: flex; flex-direction: column; gap: 4px; }
+  .demo-cta-text b { font-family: var(--font-display); font-size: 23px; color: var(--text); line-height: 1.15; }
+  .demo-cta-text small { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+  .demo-cta-url { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin: 12px 0 0; word-break: break-all; }
 
   /* ============ signature: the payload bar (slide 11) ============ */
   .payload { display: flex; flex-direction: column; gap: 20px; margin: 8px 0 4px; }
@@ -678,12 +686,12 @@
       <h2 class="head" style="margin-bottom:16px;">A real agent on our app, recorded</h2>
       <div class="fill two-col" style="align-items:start;">
         <div>
-          <video class="videobox" controls preload="none" poster="">
-            <source src="recording/agent-run.mp4" type="video/mp4">
-            Your browser can&rsquo;t play this video.
-          </video>
-          <p class="mono muted" style="font-size:15px;margin-top:10px;">recording/agent-run.mp4 &mdash; drop the file here</p>
-          <p class="note" style="margin-top:12px;">A real agent doing the task through each interface — gpt-4o and gpt-4o-mini, one recorded run each. Recorded so the numbers stay stable, with no network on stage.</p>
+          <a class="demo-cta" href="https://leejianrong.github.io/cli-mcp-axi-sharing/viz/" target="_blank" rel="noopener">
+            <span class="demo-cta-play">&#9654;</span>
+            <span class="demo-cta-text"><b>Open the interactive demo</b><small>replay the agent, side by side, through CLI &middot; MCP &middot; AXI</small></span>
+          </a>
+          <p class="demo-cta-url">leejianrong.github.io/cli-mcp-axi-sharing/viz/</p>
+          <p class="note" style="margin-top:12px;">A real agent doing the task through each interface — gpt-4o and gpt-4o-mini, one recorded run each. Step, scrub, and watch the token cost diverge — no network on stage.</p>
         </div>
         <div>
           <p class="col-title">Turns · input tokens per interface — two models, one run each</p>

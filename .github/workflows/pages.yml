@@ -1,10 +1,13 @@
-name: Deploy slides to Pages
+name: Deploy slides + demo to Pages
 
 on:
   push:
     branches: [main]
     paths:
       - "slides/**"
+      - "viz/**"
+      - "ci-demo/recordings/**"
+      - "ci-demo/data/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -27,9 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      # The deck is a static, self-contained folder — no build step.
+      # Assemble the published site. Two static apps, no build:
+      #   /            → the slides deck (index.html at the root, URL unchanged)
+      #   /viz/        → the playback visualizer
+      #   /ci-demo/…   → the recordings + runs.json the viz fetches (relative ../ci-demo/…)
+      - name: Assemble site (deck at root + viz + its data)
+        run: |
+          mkdir -p _site/viz _site/ci-demo/recordings _site/ci-demo/data
+          cp -r slides/. _site/
+          cp -r viz/. _site/viz/
+          cp ci-demo/recordings/*.json _site/ci-demo/recordings/
+          cp ci-demo/data/*.json _site/ci-demo/data/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: slides
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

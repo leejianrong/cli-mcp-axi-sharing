@@ -1,6 +1,6 @@
 # Presentation script — Apps agents love: CLI vs MCP vs AXI
 
-**How to use this.** This is a read-off script that runs slide-for-slide with `docs/presentation_outline.md`. Each section gives you the slide number and title, its target timing, brief `[stage directions]` in brackets, and the actual words to say. The spoken parts are written as paragraphs, so read them as prose and let yourself paraphrase. Nothing here needs to be recited word for word. Timings sum to about 30 minutes including the demo; there's a little slack if you keep the middle tight.
+**How to use this.** This is a read-off script that runs slide-for-slide with the deck (`slides/`, deployed to GitHub Pages). Each section gives you the slide number and title, its target timing, brief `[stage directions]` in brackets, and the actual words to say. The spoken parts are written as paragraphs, so read them as prose and let yourself paraphrase. Nothing here needs to be recited word for word. Timings sum to about 30 minutes including the demo; there's a little slack if you keep the middle tight.
 
 **Total speaking budget:** ~30 min (25 talk + ~5 Q&A).
 

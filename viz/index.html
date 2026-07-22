@@ -9,6 +9,35 @@
 <body>
 <div class="wrap">
 
+  <!-- ============ App under test: CI pipeline dashboard ============ -->
+  <section class="ciapp" id="ciapp">
+    <div class="ci-intro">
+      <p class="ci-kicker">the app under test</p>
+      <h2 class="ci-h">A mini CI/CD pipeline service</h2>
+      <p class="ci-lede">
+        This is the dummy app we built — a tiny, fully offline stand-in for something like
+        GitLab CI or GitHub Actions. It stores <b>pipeline runs</b>: each has a branch, a commit,
+        and a set of jobs (<span class="mono">lint · unit · e2e</span>) that pass, fail, or get
+        skipped. The exact same data is exposed three ways — a verbose <span class="t-cli">CLI</span>,
+        an <span class="t-mcp">MCP</span> server, and a principled <span class="t-axi">AXI</span>
+        command. Below, a real agent works one task through each of those three front doors, and we
+        measure what each interaction costs. This dashboard is just the data they're all looking at.
+      </p>
+    </div>
+    <div class="ci-board">
+      <div class="ci-board-head">
+        <span class="ci-bh-title">Pipelines</span>
+        <span class="ci-bh-stats mono" id="ciStats">—</span>
+      </div>
+      <div class="ci-rows" id="ciRows">
+        <div class="ci-loading">loading pipeline runs…</div>
+      </div>
+      <p class="ci-foot">Three front doors to this same data
+        <span class="ci-arrow">↓</span>
+        <span class="t-cli">CLI</span> · <span class="t-mcp">MCP</span> · <span class="t-axi">AXI</span></p>
+    </div>
+  </section>
+
   <header class="top">
     <div class="brand">
       <h1 class="title">
@@ -64,12 +93,6 @@
 
   <main class="stage race" id="stage"></main>
   <p class="notice" id="notice"></p>
-
-  <section class="verify">
-    <h2>Did all three get it right?</h2>
-    <p class="ask mono" id="ask"></p>
-    <div class="answers" id="answers"></div>
-  </section>
 
 </div>
 

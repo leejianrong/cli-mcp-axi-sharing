@@ -52,6 +52,7 @@ jobs:
           node --check scripts/agent-run.mjs
           node --check scripts/validate-recording.mjs
           node --check ../viz/serve.mjs
+          node --check ../viz/app.js
       # Runs the vitest suite, which includes the validator test that guards every
       # committed recording against schema drift.
       - run: pnpm test

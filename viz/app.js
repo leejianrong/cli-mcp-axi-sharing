@@ -17,6 +17,10 @@ const ACCENT = { CLI: "cli", MCP: "mcp", AXI: "axi" };
 const ORD = ["1st", "2nd", "3rd"]; // race finish ranks (only three lanes)
 // tool name -> shell binary, for rendering CLI/AXI calls as "$ ..."
 const BIN = { run_ci_cli: "ci-cli", run_ci: "ci" };
+// Fetch paths are RELATIVE to viz/index.html (../ci-demo/…) so the page works both
+// under the local server (serves repo root) and under a GitHub Pages project subpath.
+const REC_BASE = "../ci-demo/recordings/";
+const DATA_BASE = "../ci-demo/data/";
 // Two exhibits (+ the dev fixture). Both models reach the right answer on all three
 // interfaces — the story is cost, not correctness. gpt-4o is the clean headline;
 // gpt-4o-mini shows how a blunt interface taxes a weaker model: the CLI makes it
@@ -233,9 +237,9 @@ function renderLane(i) {
   if (state.mode === "race" && finished) {
     // shorter lanes finish first; ties share a rank (competition ranking).
     const rank = 1 + lanes().filter((_, j) => laneLen(j) < laneLen(i)).length;
-    flag.innerHTML = `finished <span class="lane-rank">· ${ORD[rank - 1] || rank + "th"}</span>`;
+    flag.innerHTML = `✓ finished <span class="lane-rank">· ${ORD[rank - 1] || rank + "th"}</span>`;
   } else {
-    flag.textContent = "finished";
+    flag.textContent = "✓ finished";
   }
   const anyDone = state.mode === "race" &&
     lanes().some((l) => l.events.length > 0 && state.raceCursor >= l.events.length);
@@ -261,13 +265,20 @@ function renderLane(i) {
   laneEl.querySelectorAll(".tw-chip").forEach((c) => c.classList.toggle("lit", used.has(c.dataset.tool)));
   $('[data-c="twused"]', laneEl).textContent = `${used.size} / ${iface.toolCatalog.length} used`;
 
-  // ledger — persistent bars for each revealed tool_result
+  // ledger — persistent bars for each revealed tool_result. Rebuild ONLY when the
+  // revealed count changes, and animate only the newest bar. This is the fix for
+  // "finished lanes keep animating": a done lane's count is stable, so its ledger
+  // is never re-rendered while other lanes keep racing.
   const results = ev.filter((e) => e.type === "tool_result");
   const bars = $(".lg-bars", laneEl);
-  const laneW = Math.max(120, laneEl.clientWidth - 130);
-  bars.innerHTML = results.length
-    ? results.map((r) => `<div class="lg-row"><div class="lg-bar${r.isError ? " err" : ""}" style="width:${sizePx(r.chars, laneW)}px" title="${esc(r.name)} — ${r.chars} chars"></div><span class="lg-chars">${r.chars.toLocaleString()}</span></div>`).join("")
-    : `<span class="lg-empty">no payload yet</span>`;
+  if (Number(bars.dataset.count || "-1") !== results.length) {
+    const laneW = Math.max(120, laneEl.clientWidth - 130);
+    const last = results.length - 1;
+    bars.innerHTML = results.length
+      ? results.map((r, idx) => `<div class="lg-row"><div class="lg-bar${r.isError ? " err" : ""}${idx === last ? " grow" : ""}" style="width:${sizePx(r.chars, laneW)}px" title="${esc(r.name)} — ${r.chars} chars"></div><span class="lg-chars">${r.chars.toLocaleString()}</span></div>`).join("")
+      : `<span class="lg-empty">no payload yet</span>`;
+    bars.dataset.count = String(results.length);
+  }
   const lgTot = results.reduce((s, r) => s + r.chars, 0);
   $('[data-c="lgtot"]', laneEl).textContent = lgTot.toLocaleString() + " chars";
 
@@ -424,6 +435,78 @@ function setLane(i) {
 }
 
 /* ============================================================
+   CI pipeline dashboard (the app under test) — GitLab-style, static.
+   Rendered once from data/runs.json; independent of playback.
+   ============================================================ */
+const JOB_ORDER = ["lint", "unit", "e2e"];
+const RUN_STATUS = {
+  success: { cls: "passed", label: "passed", icon: "✓" },
+  failed: { cls: "failed", label: "failed", icon: "✕" },
+  running: { cls: "running", label: "running", icon: "●" },
+};
+const JOB_STATUS = {
+  success: { cls: "ok", icon: "✓" },
+  failed: { cls: "fail", icon: "✕" },
+  running: { cls: "run", icon: "●" },
+  pending: { cls: "pend", icon: "○" },
+  skipped: { cls: "skip", icon: "–" },
+  cancelled: { cls: "cancel", icon: "⊘" },
+};
+
+function fmtDur(s) { const m = Math.floor(s / 60), ss = s % 60; return m ? `${m}m ${ss}s` : `${ss}s`; }
+function fmtWhen(iso) {
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? iso
+    : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+// Order jobs lint→unit→e2e so every pipeline's stage graph lines up column-wise.
+function orderedJobs(jobs) {
+  const by = new Map((jobs || []).map((j) => [j.name, j]));
+  const known = JOB_ORDER.filter((n) => by.has(n)).map((n) => by.get(n));
+  const extra = (jobs || []).filter((j) => !JOB_ORDER.includes(j.name));
+  return [...known, ...extra];
+}
+
+function ciStages(jobs) {
+  return orderedJobs(jobs).map((j, idx) => {
+    const s = JOB_STATUS[j.status] || JOB_STATUS.pending;
+    const link = idx > 0 ? `<span class="ci-link"></span>` : "";
+    return `${link}<span class="ci-stage ci-${s.cls}" title="${esc(j.name)}: ${esc(j.status)}"><i>${s.icon}</i><em>${esc(j.name)}</em></span>`;
+  }).join("");
+}
+
+function renderCiBoard(runs) {
+  const n = (t) => runs.filter((r) => r.status === t).length;
+  $("#ciStats").textContent = `${runs.length} pipelines · ${n("failed")} failed · ${n("running")} running · ${n("success")} passed`;
+  $("#ciRows").innerHTML = runs.map((r) => {
+    const rs = RUN_STATUS[r.status] || RUN_STATUS.running;
+    const c = r.commit || {};
+    return `<div class="ci-row">
+      <span class="ci-badge ci-b-${rs.cls}"><i>${rs.icon}</i>${rs.label}</span>
+      <div class="ci-idcol"><span class="ci-id">${esc(r.id)}</span><span class="ci-trig">${esc(r.trigger)}</span></div>
+      <div class="ci-refcol">
+        <span class="ci-branch" title="${esc(r.branch)}">⌥ ${esc(r.branch)}</span>
+        <span class="ci-commit"><span class="ci-sha">${esc(c.sha || "")}</span> ${esc(c.message || "")} <span class="ci-auth">${esc(c.author || "")}</span></span>
+      </div>
+      <div class="ci-stages">${ciStages(r.jobs)}</div>
+      <div class="ci-metacol"><span class="ci-dur">⏱ ${fmtDur(r.duration_seconds || 0)}</span><span class="ci-when">${esc(fmtWhen(r.created_at))}</span></div>
+    </div>`;
+  }).join("");
+}
+
+async function loadCiBoard() {
+  try {
+    const res = await fetch(DATA_BASE + "runs.json");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    renderCiBoard(await res.json());
+  } catch (err) {
+    $("#ciRows").innerHTML = `<div class="ci-loading">Couldn't load pipeline data (${esc(err.message)}). Serve the repo with <b>pnpm viz</b> to view it.</div>`;
+    $("#ciStats").textContent = "";
+  }
+}
+
+/* ============================================================
    Data loading
    ============================================================ */
 function applyData(data) {
@@ -451,20 +534,6 @@ function applyData(data) {
     b.setAttribute("aria-pressed", "true");
     setLane(Number(b.dataset.lane));
   }));
-  // verification panel
-  $("#ask").textContent = data.task;
-  $("#answers").innerHTML = data.interfaces.map((f) => {
-    const fin = [...f.events].reverse().find((e) => e.type === "final");
-    const acc = ACCENT[f.label];
-    const cost = f.totals.cost == null ? "n/a" : "$" + f.totals.cost.toFixed(5);
-    return `<div class="answer" style="--accent:var(--${acc});--accent-ink:var(--${acc}-ink)">
-      <div class="a-head"><span class="a-tag">${esc(f.label)}</span>
-        <span class="mono" style="font-size:11px;color:var(--muted)">${f.totals.total.toLocaleString()} tok · ${f.totals.turns} turns · ${f.totals.toolCalls} calls</span>
-        <span class="a-cost">${cost}</span></div>
-      <div class="a-body">${fin ? esc(fin.text) : "<em>no final</em>"}</div>
-    </div>`;
-  }).join("");
-
   buildScoreboard();
   buildStage();
   render();
@@ -473,7 +542,7 @@ function applyData(data) {
 
 async function loadBundled(file) {
   try {
-    const res = await fetch(`/ci-demo/recordings/${file}`);
+    const res = await fetch(REC_BASE + file);
     if (!res.ok) throw new Error("HTTP " + res.status);
     applyData(await res.json());
     const entry = BUNDLED.find((b) => b.file === file);
@@ -530,6 +599,7 @@ function init() {
     else if (e.key === "ArrowLeft") { e.preventDefault(); pause(); stepBack(); }
   });
 
+  loadCiBoard();
   loadBundled(BUNDLED[0].file);
 }
 

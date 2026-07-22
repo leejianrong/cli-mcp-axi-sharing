@@ -14,6 +14,7 @@
   --muted: #5A6675;
   --fail: #C0453F;
   --pass: #2F8F63;
+  --ci-run: #3B7DD8;   /* pipeline "in progress" — distinct from the CLI blue */
 
   /* per-interface identity — kept consistent across lane/packets/counters */
   --cli: #3E6EA5;  --cli-ink: #2E5686;  --cli-wash: rgba(62,110,165,0.10);
@@ -40,6 +41,88 @@ body {
 
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .wrap { max-width: 1440px; margin: 0 auto; padding: 22px clamp(16px, 3vw, 40px) 64px; }
+
+/* ---------- app under test: CI pipeline dashboard ---------- */
+.ciapp {
+  margin: 4px 0 26px;
+  display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 30px; align-items: start;
+}
+.ci-kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.ci-h { font-family: var(--font-display); font-size: clamp(21px, 2.3vw, 29px); font-weight: 700; letter-spacing: -.01em; margin: 0 0 10px; }
+.ci-lede { font-size: 14px; line-height: 1.62; color: var(--muted); margin: 0; max-width: 48ch; text-wrap: pretty; }
+.ci-lede b { color: var(--text); font-weight: 600; }
+.ci-lede .mono { font-size: 12.5px; color: var(--text); }
+.t-cli { color: var(--cli-ink); font-weight: 700; }
+.t-mcp { color: var(--mcp-ink); font-weight: 700; }
+.t-axi { color: var(--axi-ink); font-weight: 700; }
+
+.ci-board { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.ci-board-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.ci-bh-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; }
+.ci-bh-stats { font-size: 12px; color: var(--muted); }
+.ci-loading { padding: 18px 16px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-style: italic; }
+
+.ci-row {
+  display: grid; align-items: center; gap: 14px;
+  grid-template-columns: 88px 78px minmax(0, 1fr) auto auto;
+  padding: 11px 16px; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 12.5px;
+}
+.ci-row:last-child { border-bottom: 0; }
+.ci-row:hover { background: color-mix(in srgb, var(--surface-2) 45%, var(--surface)); }
+
+.ci-badge {
+  display: inline-flex; align-items: center; gap: 5px; justify-self: start;
+  padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  border: 1px solid transparent; white-space: nowrap;
+}
+.ci-badge i { font-style: normal; font-size: 10px; }
+.ci-b-passed  { color: var(--pass);   background: color-mix(in srgb, var(--pass) 12%, transparent);   border-color: color-mix(in srgb, var(--pass) 32%, transparent); }
+.ci-b-failed  { color: var(--fail);   background: color-mix(in srgb, var(--fail) 12%, transparent);   border-color: color-mix(in srgb, var(--fail) 32%, transparent); }
+.ci-b-running { color: var(--ci-run); background: color-mix(in srgb, var(--ci-run) 12%, transparent); border-color: color-mix(in srgb, var(--ci-run) 32%, transparent); }
+.ci-b-running i { animation: cipulse 1.2s ease-in-out infinite; }
+@keyframes cipulse { 50% { opacity: .3; } }
+
+.ci-idcol { display: flex; flex-direction: column; gap: 2px; }
+.ci-id { font-weight: 700; color: var(--text); }
+.ci-trig { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+.ci-refcol { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ci-branch { color: var(--cli-ink); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-commit { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-sha { color: var(--text); font-weight: 600; }
+.ci-auth { font-style: italic; }
+
+.ci-stages { display: flex; align-items: flex-start; }
+.ci-stage { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; width: 44px; }
+.ci-stage i {
+  font-style: normal; display: grid; place-items: center; width: 21px; height: 21px;
+  border-radius: 50%; font-size: 11px; font-weight: 700; border: 1.5px solid;
+}
+.ci-stage em { font-style: normal; font-size: 9px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.ci-link { width: 12px; height: 1.5px; background: var(--border); margin-top: 10px; flex: none; }
+.ci-ok i     { color: var(--pass);   border-color: var(--pass);   background: color-mix(in srgb, var(--pass) 10%, transparent); }
+.ci-fail i   { color: var(--fail);   border-color: var(--fail);   background: color-mix(in srgb, var(--fail) 12%, transparent); }
+.ci-run i    { color: var(--ci-run); border-color: var(--ci-run); animation: cipulse 1.2s ease-in-out infinite; }
+.ci-pend i, .ci-skip i, .ci-cancel i { color: var(--muted); border-color: var(--border); border-style: dashed; }
+
+.ci-metacol { display: flex; flex-direction: column; gap: 2px; text-align: right; white-space: nowrap; }
+.ci-dur { color: var(--text); }
+.ci-when { font-size: 10px; color: var(--muted); }
+
+.ci-foot {
+  display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 16px;
+  border-top: 1px solid var(--border); background: var(--surface-2);
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+}
+.ci-arrow { color: var(--muted); font-weight: 700; }
+
+@media (max-width: 900px) {
+  .ciapp { grid-template-columns: 1fr; gap: 18px; }
+  .ci-lede { max-width: none; }
+  .ci-row { grid-template-columns: 80px minmax(0, 1fr) auto; }
+  .ci-idcol, .ci-metacol { display: none; }
+}
 
 /* ---------- header / thesis ---------- */
 header.top {
@@ -173,7 +256,7 @@ input[type=range] { flex: 1; accent-color: var(--text); cursor: pointer; height:
 .stage.race { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 /* Bound race lanes so MCP's long transcript scrolls inside a fixed-height card
    instead of stretching the page; grid still stretches all three to match. */
-.stage.race .lane { max-height: 720px; }
+.stage.race .lane { max-height: 880px; }
 .stage.seq { grid-template-columns: minmax(0, 1fr); max-width: 920px; margin: 0 auto; }
 
 .lane {
@@ -182,7 +265,13 @@ input[type=range] { flex: 1; accent-color: var(--text); cursor: pointer; height:
   border-top: 3px solid var(--accent);
   height: 100%;
 }
-.lane.done { box-shadow: 0 0 0 1px var(--accent), 0 10px 30px -18px var(--accent); }
+/* Finished lane: shade the whole card + a filled "✓ finished" badge, so it's
+   unmistakable which interfaces are done while others keep working. */
+.lane.done {
+  border-color: var(--accent); border-top-width: 4px;
+  background: color-mix(in srgb, var(--accent-wash) 65%, var(--surface));
+  box-shadow: 0 0 0 2px var(--accent-wash), 0 14px 34px -20px var(--accent);
+}
 
 .lane-head {
   display: flex; align-items: baseline; gap: 10px; padding: 14px 16px 10px;
@@ -191,15 +280,22 @@ input[type=range] { flex: 1; accent-color: var(--text); cursor: pointer; height:
   font-family: var(--font-mono); font-weight: 700; font-size: 18px; letter-spacing: .06em;
   color: var(--accent-ink);
 }
-.lane-sub { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.lane-sub {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .lane-flag {
   margin-left: auto; font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em;
   text-transform: uppercase; padding: 3px 9px; border-radius: 999px;
   background: var(--surface-2); color: var(--muted); opacity: 0; transition: opacity .3s;
 }
-.lane.done .lane-flag { opacity: 1; background: var(--accent-wash); color: var(--accent-ink); }
+.lane.done .lane-flag {
+  opacity: 1; background: var(--accent); color: #fff; font-weight: 700;
+  font-size: 12px; padding: 4px 12px; box-shadow: 0 3px 10px -3px var(--accent);
+}
 /* finish rank ("· 1st") keeps its lowercase ordinal against the uppercased flag */
 .lane-flag .lane-rank { text-transform: none; color: var(--accent-ink); font-weight: 700; }
+.lane.done .lane-flag .lane-rank { color: #fff; }
 
 /* ---- finish drama (race mode only) ---- */
 /* Resting: a finished lane settles — accent-tinted head, chrome dialled down,
@@ -288,8 +384,10 @@ input[type=range] { flex: 1; accent-color: var(--text); cursor: pointer; height:
 .lg-bar {
   height: 12px; border-radius: 3px; min-width: 6px;
   background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 50%, #fff), var(--accent));
-  animation: grow .45s cubic-bezier(.2,.7,.2,1);
 }
+/* Only the newest payload bar animates in; existing bars (and every bar of a
+   finished lane) stay static — the ledger is rebuilt only when a payload arrives. */
+.lg-bar.grow { animation: grow .45s cubic-bezier(.2,.7,.2,1); }
 .lg-bar.err { background: linear-gradient(90deg, #E08A85, var(--fail)); }
 .lg-chars { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
 @keyframes grow { from { transform: scaleX(.02); transform-origin: left; opacity: .3; } to { transform: none; opacity: 1; } }
@@ -298,14 +396,14 @@ input[type=range] { flex: 1; accent-color: var(--text); cursor: pointer; height:
 /* transcript */
 .transcript {
   margin: 8px 12px 12px; padding: 12px; flex: 1 1 auto;
-  min-height: 240px; max-height: 62vh; overflow: auto;
+  min-height: 360px; max-height: 68vh; overflow: auto;
   background: #0E141B; border-radius: 10px;
   font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; color: #C6D2DE;
 }
 /* race mode: let the terminal fill each card so all three panels align with
    no white void below short lanes (grid stretches lanes to the tallest). */
 .stage.race .transcript { max-height: none; }
-.stage.seq .transcript { max-height: 560px; }
+.stage.seq .transcript { max-height: 680px; }
 .t-turn {
   display: flex; align-items: center; gap: 8px; margin: 12px 0 6px;
   font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #6B7C8C;
@@ -331,19 +429,6 @@ input[type=range] { flex: 1; accent-color: var(--text); cursor: pointer; height:
 .t-final .fin-head { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 10px; margin-bottom: 6px; }
 .t-empty { color: #5E6E7C; font-style: italic; }
 
-/* ---------- verification panel ---------- */
-.verify { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 22px; }
-.verify h2 {
-  font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0 0 4px;
-}
-.verify .ask { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin: 0 0 18px; max-width: 80ch; }
-.answers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.answer { border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 12px; background: var(--surface); padding: 14px 16px; }
-.answer .a-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
-.answer .a-tag { font-family: var(--font-mono); font-weight: 700; letter-spacing: .06em; color: var(--accent-ink); }
-.answer .a-cost { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
-.answer .a-body { font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; color: var(--text); }
-
 /* drop hint */
 #drop { position: fixed; inset: 0; z-index: 50; display: none; place-items: center; background: rgba(16,21,28,.55); backdrop-filter: blur(3px); }
 #drop.show { display: grid; }
@@ -355,7 +440,6 @@ input[type=range] { flex: 1; accent-color: var(--text); cursor: pointer; height:
 
 @media (max-width: 900px) {
   .stage.race { grid-template-columns: 1fr; }
-  .answers { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; transition-duration: .001ms !important; }

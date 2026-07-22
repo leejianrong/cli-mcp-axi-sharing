@@ -124,6 +124,22 @@ body {
   .ci-idcol, .ci-metacol { display: none; }
 }
 
+/* ---------- section divider: app-under-test | the benchmark ---------- */
+.section-break {
+  display: flex; align-items: center; gap: 16px;
+  margin: 46px 0 6px;
+}
+.section-break::before, .section-break::after {
+  content: ""; height: 1px; flex: 1;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+.section-break span {
+  flex: none; font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+  padding: 4px 12px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface);
+}
+
 /* ---------- header / thesis ---------- */
 header.top {
   display: flex; flex-wrap: wrap; align-items: flex-start;

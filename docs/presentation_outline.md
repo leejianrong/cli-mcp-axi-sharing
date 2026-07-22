@@ -100,20 +100,20 @@
   4. Run the **tokenizer diff** across all three payloads → keep the result on screen for slide 11. (~1 min)
 - **Speaker note:** this is a *run*, not a build — narrate the effect, not the typing. If any command wobbles, **cut to the recording** immediately (script has the trigger + timestamps). Don't debug live.
 
-## Slide 11 — Results: the live token diff (1:00)
-- **Layout:** Big, bold results table (bar chart if the deck supports it). Columns: Interface · Payload tokens · vs MCP. These are the **real measured numbers** from `scripts/token-diff.mjs` on the seeded data:
+## Slide 11 — The first call, measured (1:00)
+- **Layout:** Big, bold bar chart. Columns: Interface · First-call input tokens · vs MCP. These are the **real** input tokens the model read on its **first call**, taken from the gpt-4o recording (`recordings/openai-gpt-4o.json`, the first turn's `tokens.input`) — not an estimate:
 
-  | Interface | Payload tokens | vs MCP |
+  | Interface | First-call input tokens | vs MCP |
   |---|---|---|
-  | MCP (21 tool schemas + result) | **3,897** | baseline |
-  | CLI (verbose JSON) | **264** | −93% |
-  | AXI (TOON, 4 fields, truncated) | **236** | **−94%** (−11% vs CLI) |
+  | MCP (21 tool schemas) | **2,188** | baseline |
+  | CLI (1 tool) | **184** | −92% |
+  | AXI (1 tool) | **181** | −92% (≈ CLI) |
 
 - **Talking points:**
-  - Read the numbers: the MCP payload is heaviest by far (a realistic ~21-tool catalog plus a result), while CLI and AXI land close together and low — both return a summary on this call.
-  - **Say the honest framing:** "This is the *per-call payload* difference, measured live with an approximate tokenizer — read the *direction and magnitude*, not the third digit. But an agent doesn't call a tool once…"
-  - One honest aside worth making: MCP dwarfs the other two — roughly 15× the CLI's payload — because a realistic CI server exposes ~21 tools (runs, jobs, logs, artifacts, workflows, deployments, …), and every schema rides in context on *every* turn. A bigger server widens the gap further; a lean 3-tool server would narrow it. CLI and AXI are close on this one call (both return a summary; AXI's −11% edge is TOON plus a free summary line, log preview, and next hint) — AXI's real separation shows up across the whole task, on the next slide.
-- **Transition:** "…so what happens across a whole task? Let me show you a real agent doing exactly this."
+  - Read the numbers: MCP already carries all 21 tool schemas — roughly two thousand tokens of schema tax before it does any work. CLI and AXI each expose a single tool, so per call they're neck and neck.
+  - **Say the honest framing:** "These are real input tokens from the run, not an estimate. One call. The gap you see is MCP's schema tax; CLI and AXI are level. But an agent never calls a tool once…"
+  - Offline aside (only if asked): `make token-diff` prints a rough gpt-tokenizer *approximation* of the per-call payloads (schemas + command output). It's a dev sanity check, **not** the slide's source — the slide numbers are the real measured tokens from the run.
+- **Transition:** "…so what happens across the whole task? Here's a real agent doing exactly this." → open the interactive demo (next slide).
 
 ## Slide 12 — Real agent, our app: the recorded run (2:30)
 - **Layout:** Embedded **pre-recorded video** (or GIF) of a genuine agent completing a **multi-step task** — _"for each failing run, which job failed, and is it a flaky/infra issue or a real regression?"_ — through each interface. Overlay/caption the live counters: **turns · total tokens · cost**. Below the video, the summary table — two models, one recorded run each (real numbers from `scripts/agent-run.mjs --provider openai`):

@@ -37,21 +37,21 @@ run() { printf '  \033[1;32m$ %s\033[0m\n\n' "$1"; eval "$1"; }
 pause() { printf '\n  \033[2m(space for next)\033[0m'; read -rsn1 _; printf '\r\033[K\n'; }
 
 # --- Step 1 — the CLI: verbose by default -----------------------------------
-step "1/4  CLI — verbose by default"
+step "1/3  CLI — verbose by default"
 run 'node dist/cli.js list --status failed | head -40'
 printf '\n  \033[2m…and it keeps going. No summary, no next step — the agent reads all of it, every turn.\033[0m\n'
 run 'node scripts/capture.mjs cli'
 pause
 
 # --- Step 2 — the MCP payload: the schema tax -------------------------------
-step "2/4  MCP — the schema tax"
+step "2/3  MCP — the schema tax"
 run 'node scripts/capture.mjs mcp'
 run 'head -40 out/mcp-payload.json'
 printf '\n  \033[2mSix tools, each a full schema — the whole menu is loaded into context, charged every turn.\033[0m\n'
 pause
 
 # --- Step 3 — the finished AXI command --------------------------------------
-step "3/4  AXI — the finished command"
+step "3/3  AXI — the finished command"
 run 'node dist/axi.js list --status failed'
 printf '\n  \033[2mSummary line (P4), four fields (P2), truncated logs (P3), TOON encoding (P1).\033[0m\n'
 pause
@@ -60,8 +60,7 @@ printf '\n  \033[2m--full is the escape hatch: nothing hidden, just deferred.\03
 run 'node dist/axi.js list --status failed > out/axi-output.txt'
 pause
 
-# --- Step 4 — the payoff: token diff ----------------------------------------
-step "4/4  The payoff — token diff"
-run 'node scripts/token-diff.mjs'
-printf '\n  \033[2mPer-call payload, measured live with an approximate tokenizer — read the direction and magnitude.\033[0m\n'
-printf '  \033[2mBut an agent never calls a tool just once… → slide 12 (recorded real-agent run).\033[0m\n\n'
+# --- The payoff lives in the deck + the interactive demo --------------------
+printf '\n  \033[2mThe payoff is on the deck: the slide "The first call, measured" shows the real\033[0m\n'
+printf '  \033[2mgpt-4o first-call tokens, then the interactive demo (make viz) replays the whole run.\033[0m\n'
+printf '  \033[2m(make token-diff prints an offline gpt-tokenizer approximation, if you want it.)\033[0m\n\n'

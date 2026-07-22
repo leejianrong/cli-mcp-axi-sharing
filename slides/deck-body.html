@@ -650,27 +650,27 @@
 
     <!-- ============ SLIDE 11 — Signature: payload bar ============ -->
     <section class="slide" data-slide="11" id="slide-11">
-      <h2 class="head" style="margin-bottom:20px;">The live token diff</h2>
+      <h2 class="head" style="margin-bottom:20px;">The first call, measured</h2>
       <div class="fill" style="display:flex;flex-direction:column;justify-content:center;">
         <div class="payload">
           <div class="pbar-row">
-            <div class="pbar-label">MCP<small>21 schemas + result</small></div>
+            <div class="pbar-label">MCP<small>21 tool schemas</small></div>
             <div class="pbar-track"><div class="pbar-fill tax" data-w="100"></div></div>
-            <div class="pbar-num tax-c" data-to="3897">0<small class="muted">baseline</small></div>
+            <div class="pbar-num tax-c" data-to="2188">0<small class="muted">baseline</small></div>
           </div>
           <div class="pbar-row">
-            <div class="pbar-label">CLI<small>verbose JSON</small></div>
-            <div class="pbar-track"><div class="pbar-fill tax-dim" data-w="6.77"></div></div>
-            <div class="pbar-num dim-c" data-to="264">0<small class="muted">&minus;93% vs MCP</small></div>
+            <div class="pbar-label">CLI<small>1 tool</small></div>
+            <div class="pbar-track"><div class="pbar-fill tax-dim" data-w="8.41"></div></div>
+            <div class="pbar-num dim-c" data-to="184">0<small class="muted">&minus;92% vs MCP</small></div>
           </div>
           <div class="pbar-row">
-            <div class="pbar-label accent">AXI<small>TOON · 4 fields · trunc</small></div>
-            <div class="pbar-track"><div class="pbar-fill win" data-w="6.06"></div></div>
-            <div class="pbar-num win-c" data-to="236">0<small style="color:var(--hero-ink)">&minus;94% · &minus;11% vs CLI</small></div>
+            <div class="pbar-label accent">AXI<small>1 tool</small></div>
+            <div class="pbar-track"><div class="pbar-fill win" data-w="8.27"></div></div>
+            <div class="pbar-num win-c" data-to="181">0<small style="color:var(--hero-ink)">&minus;92% · &asymp; CLI</small></div>
           </div>
         </div>
         <div class="spacer-m"></div>
-        <p class="note">Per-call payload, measured with an approximate tokenizer, so read the shape, not the third digit. And this is one call. An agent never calls a tool once.</p>
+        <p class="note">Real input tokens the model reads on its <b>first call</b>, from the gpt-4o run. MCP carries all 21 tool schemas; CLI and AXI each expose one. Per call, CLI and AXI are neck and neck; MCP already pays the schema tax. And this is just one call; an agent never calls a tool once.</p>
       </div>
     </section>
 

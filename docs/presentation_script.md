@@ -202,31 +202,31 @@ And there's the payoff. Same task, three payloads, counted with a tokenizer. Hol
 
 [If any command errors or hangs past about five seconds, stop and say: "Let me switch to a capture of this exact run so we don't waste your time," then play the recording from the noted timestamp. Narrate over it exactly as you would live. Don't debug.]
 
-## Slide 11 — Results: the live token diff (1:00)
+## Slide 11 — The first call, measured (1:00)
 
-[Advance to the results table. Read the numbers off it.]
+[Advance to the chart. Read the numbers off it.]
 
-Here are the numbers we just generated. MCP is the heaviest at three thousand eight hundred and ninety-seven tokens: twenty-one tool schemas plus a result. The CLI comes in at one thousand three hundred and fifty-eight, that's 65% below MCP, roughly a third of it. And AXI is two hundred and thirty-six, ninety-four percent below MCP, and eighty-three percent below the CLI.
+These are real input tokens from the recorded gpt-4o run, not an estimate, and this is just the model's first call. MCP reads two thousand one hundred and eighty-eight tokens, because it carries all twenty-one tool schemas before it does any work. The CLI reads a hundred and eighty-four, and AXI a hundred and eighty-one. Both are about ninety-two percent below MCP, and they're level with each other, because each one exposes a single tool.
 
-[Say the honest framing plainly. This is the line the room will remember you for.]
+[Say the honest framing plainly.]
 
-One caveat, stated up front. This is the per-call payload difference, measured with an approximate tokenizer. It's close to Claude's but not identical. So read the direction and the magnitude, not the third digit. The shape is what's real.
+So on one call the entire gap is MCP's schema tax. CLI and AXI are neck and neck. That's the honest picture: once you're down to a single tool, the interface style barely moves the per-call number. Where AXI pulls away is across the whole task, which is the next slide, because an agent never calls a tool just once.
 
-And one honest aside, because a sharp lead will ask. The MCP payload is nearly three times the CLI's verbose dump — and that's the twenty-one tool schemas riding along in context. That's a realistic CI surface, not padding; a bigger server pushes MCP higher still, a leaner one narrows it. AXI's ninety-four percent barely moves either way. But this is still one call. An agent never calls a tool just once, so what happens across a whole task?
+## Slide 12 — A real agent on our app, recorded (2:30)
 
-## Slide 12 — Real agent, our app: the recorded run (2:30)
-
-[Advance. Play the pre-recorded agent video. Counters on screen: turns · total tokens · cost. Summary table below.]
+[Advance. Open the interactive demo and press play. Per-lane counters on screen: turns, tool calls, tokens.]
 
 [Say this out loud so it's never mistaken for sleight of hand.]
 
-This is a recording, not a live agent. But it *is* a genuine agent, gpt-4o-mini, doing a real, multi-step task on the same app we just ran, three times, once through each interface. The task: for each failing run, figure out which job failed and whether it's a flaky infrastructure issue or a real regression. It's recorded for one reason: the numbers stay stable, and there's no network or API risk on stage. And the comparison is fair — same minimal system prompt, each interface gets only its own tools, no prompt caching — so the tokens you see belong to the interface, not to some harness overhead. Same model, same task, same app: the only thing that changes is the interface, which is exactly the variable we care about.
+This is a recording, not a live agent, but it is a genuine agent doing a real, multi-step task on the same app we just ran, once through each interface. The task: for each failing run, figure out which job failed and whether it's a flaky infrastructure issue or a real regression. It's recorded for one reason, that the numbers stay stable and there's no network on stage. The comparison is fair: the same minimal system prompt, each interface gets only its own tools, and no prompt caching, so the tokens you see belong to the interface, not to some harness overhead.
 
-[Walk the counters as they move. Point at the on-screen table for the figures.]
+[Let it play. Point at the lanes as the counters move.]
 
-Watch what compounds. MCP's list gives back summaries, so to judge each failure the agent has to drill in — pull the logs for one run, then the next — and every one of those turns re-reads all twenty-one schemas. So it burns the most tokens and the most round-trips. AXI answers the whole thing in a single compact call, because the interface did the drill-down for it. The CLI dumps everything in one big turn: cheaper on round-trips, but it's a wall of JSON to reason over, and it's wobblier.
+Watch what compounds. All three take the same path: list the failing runs, then pull each one's detail. MCP returns summaries, so the agent drills in per run, and every one of those turns re-reads all twenty-one schemas. That's why it carries the heaviest load, about ten thousand nine hundred input tokens on gpt-4o. AXI does the same drill-down with lean, compact payloads and finishes lowest, around two thousand two hundred. The CLI sits in between, near four thousand.
 
-[TODO: fill the three numbers — turns / total tokens / cost per interface — once `node scripts/agent-run.mjs` has been run from `ci-demo/`. Read them off the on-screen table rather than from memory; expect the same shape as the published benchmark on slide 13 (MCP heaviest on turns and tokens, AXI lowest on both). Do not invent figures.]
+[Switch the exhibit to gpt-4o-mini.]
+
+Same runs, a weaker model. On gpt-4o the CLI is fine, five turns. On gpt-4o-mini the blunt interface makes it thrash, ten turns and twenty-one tool calls, to reach the same answer AXI gets in three. All three still get it right, so the story here is cost, not correctness. A good interface saves tokens and keeps a weaker model on the rails.
 
 The point is right there in the table. Slide 11 was a single payload. Here you see it compound: because tokens are charged per turn, that per-call gap multiplies across the whole task. That's the mechanism, running end to end.
 

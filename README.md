@@ -9,9 +9,9 @@ shrink, and then watch the gap compound across a whole task.
 
 - **Slides:** <https://leejianrong.github.io/cli-mcp-axi-sharing/>
 - **Interactive demo:** <https://leejianrong.github.io/cli-mcp-axi-sharing/viz/>
-- **Talk plan:** [`docs/`](docs/) holds the [discovery notes](docs/discovery_notes.md),
-  [slide outline](docs/presentation_outline.md), [demo runbook](docs/live_demo_script.md),
-  and [read-off script](docs/presentation_script.md).
+- **Read-off script (for presenting):** [`docs/presentation_script.md`](docs/presentation_script.md).
+- **Planning docs** (the thinking behind the talk, archived): [`docs/planning/`](docs/planning/) has the
+  discovery notes, slide outline, and demo runbook.
 
 ## Where the numbers come from
 
@@ -47,7 +47,7 @@ real runs above.
 
 **An external published benchmark (the "holds at scale" slide).** That slide cites the
 AXI author's own benchmark (85 runs per condition, Claude Sonnet, `openclaw/openclaw`),
-transcribed from [`docs/discovery_notes.md`](docs/discovery_notes.md). We did not
+transcribed from [`docs/planning/discovery_notes.md`](docs/planning/discovery_notes.md). We did not
 measure those, and the talk says so out loud.
 
 ## Quick start
@@ -116,7 +116,7 @@ Before that, `ci-demo/demo.sh` drives the live command steps on the space bar (t
 wall, the MCP schema tax, and the AXI output with `--full`); run `source aliases.sh`
 first for the short commands. If anything hiccups, cut to the demo rather than
 debugging on stage. The full runbook and fallback plan are in
-[`docs/live_demo_script.md`](docs/live_demo_script.md).
+[`docs/planning/live_demo_script.md`](docs/planning/live_demo_script.md).
 
 ## Layout
 

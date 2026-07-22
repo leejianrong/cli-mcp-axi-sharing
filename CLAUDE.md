@@ -10,16 +10,17 @@ calls in any demo path.
 Trust the code over any prose. If a command below disagrees with what you see,
 the running code wins — fix the doc.
 
-## Source of truth (read before building)
+## Docs map
 
-The plan is already locked in three spec docs under `docs/`. Follow them; don't
-reinvent the design.
+The live presentation artifact is `docs/presentation_script.md` (the read-off script),
+and the deck itself is `slides/` (deployed to GitHub Pages). The original planning docs
+are archived under `docs/planning/` for background — the repo is built, so trust the code
+and the slides over these:
 
-- `docs/discovery_notes.md` — the aligned plan, locked defaults, honesty framing.
-- `docs/presentation_outline.md` — the 17-slide deck (note **Slide 8b** code
-  snippets, **Slide 11** results table, **Slide 12** agent-run table).
-- `docs/live_demo_script.md` — the runbook. **§0 fully specifies `ci-demo/`.**
-- `IMPLEMENTATION_PROMPT.md` — the phased build order this work follows.
+- `docs/planning/discovery_notes.md` — the aligned plan, locked defaults, honesty framing.
+- `docs/planning/presentation_outline.md` — the slide-by-slide outline.
+- `docs/planning/live_demo_script.md` — the demo runbook. **§0 specifies `ci-demo/`.**
+- `IMPLEMENTATION_PROMPT.md` — the phased build order the initial build followed.
 
 The real AXI project is cloned **outside this repo** at
 `/home/jian/projects/axi-demo/axi` (its SDK is vendored in — see below). Skim its
@@ -130,7 +131,7 @@ measured harness path.
 - **AXI (`src/axi.ts`, bin `ci`)** — the finished command. `ci --help` lists the
   subcommands:
   - `ci list [--status] [--full]` — implements four principles exactly as
-    `docs/live_demo_script.md` §0 shows: P1 TOON via `renderOutput`, P2 minimal
+    `docs/planning/live_demo_script.md` §0 shows: P1 TOON via `renderOutput`, P2 minimal
     4-field schema, P4 a pre-computed `summary` line, P3 `truncate` + `--full`.
     Plus a definitive empty state and a `next` hint. Keep it line-for-line
     consistent with the slide-8b snippets — if they drift, fix one.
